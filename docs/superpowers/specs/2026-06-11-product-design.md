@@ -219,7 +219,7 @@ Budget Code (text, required).
 
 The seed script powers both initial deployment and `POST /api/reset-demo`.
 
-## 12. Testing Strategy (Vitest, ~30–40 unit tests)
+## 12. Testing Strategy (Vitest unit + Playwright E2E)
 
 - **Engine:** auto vs manual at `amount = threshold`; boundary `amount = upTo`;
   threshold 0; disabled claim type; missing/invalid custom fields; notification
@@ -230,6 +230,14 @@ The seed script powers both initial deployment and `POST /api/reset-demo`.
 - **Schema refinements:** each of the 8 validation rules has a rejecting fixture.
 - **Versioning:** save increments version; rollback creates a new version with copied
   config and leaves history intact.
+
+**End-to-end (Playwright, chromium, ~8 specs against the local dev server):** home lists
+the three seeds after reset · editor save creates a new version · invalid config blocked
+inline · preview reproduces the §5 worked example · demo page renders three different
+fates · diff highlights SafeGuard-vs-GovHealth differences · rollback restores previous
+behavior in preview · tenant #4 onboards through the UI with zero code and processes a
+claim. The suite calls `POST /api/reset-demo` in `beforeAll` and runs with `workers: 1`
+so runs are deterministic.
 
 ## 13. Deployment
 

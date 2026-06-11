@@ -6,9 +6,9 @@
 
 **Architecture:** One Zod schema owns config integrity (client + server). Configs are versioned JSONB snapshots in PostgreSQL (2 tables, forward-only). The engine is a pure function with no IO; every consumer (runtime API, preview, demo, tests) calls the same code path.
 
-**Tech Stack:** Next.js App Router · TypeScript strict · Ant Design v5 · Zod · Prisma · Neon PostgreSQL · Vitest · Vercel
+**Tech Stack:** Next.js App Router · TypeScript strict · Ant Design v5 · Zod · Prisma · Neon PostgreSQL · Vitest · Playwright (E2E) · Vercel
 
-**Budget:** ~12h across 4 milestones: M0 scaffold (1h) · M1 domain core (3h) · M2 persistence+API (2.5h) · M3 admin UI (4h) · M4 hardening+deploy+docs (1.5h)
+**Budget:** ~13h across 4 milestones: M0 scaffold (1h) · M1 domain core (3h) · M2 persistence+API (2.5h) · M3 admin UI (4h) · M4 hardening+E2E+deploy+docs (2.5h)
 
 **Conventions (from CLAUDE.md):** TDD for all `lib/` logic; one commit per task; tick the checkbox and update `docs/PROGRESS.md` Snapshot after each task; every task has a `Verify:` criterion.
 
@@ -684,7 +684,32 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 - [ ] Walk the checklist manually, fix gaps, add a regression test where the gap was in `lib/` logic.
 - [ ] Commit — `fix: harden error states across API and UI`
 
-### Task 17: Deploy to Vercel + Neon, seed, smoke test
+### Task 17: Playwright E2E suite
+
+**Files:** Create: `playwright.config.ts`, `e2e/admin-flows.spec.ts`; Modify: `package.json` (script `"test:e2e": "playwright test"`), `.gitignore` (add `playwright-report/`, `test-results/`)
+**Verify:** `npx playwright test` → 8 passed, deterministic across two consecutive runs.
+
+- [ ] **Step 1: Install** — `npm init playwright@latest -- --quiet` (TypeScript, `e2e/` folder, **chromium only**). Config: `webServer: { command: 'npm run dev', url: 'http://localhost:3000', reuseExistingServer: true }`, `workers: 1` (specs mutate shared seed data).
+
+- [ ] **Step 2: Write `e2e/admin-flows.spec.ts`** — `test.beforeAll` posts `/api/reset-demo`; then 8 specs:
+
+```ts
+test('home lists the three seeded tenants', ...);     // cards: SafeGuard Insurance, HealthFirst, GovHealth
+test('editor save creates a new version', ...);       // safeguard: threshold 20000→25000, save → history shows v2 with note
+test('invalid config is blocked inline', ...);        // SLA = -1 → inline error visible, no new version created
+test('preview reproduces the worked example', ...);   // safeguard OUTPATIENT 12000 @2026-06-12 + employeeId → AUTO_APPROVED, SLA 2026-06-19
+test('demo page shows three different fates', ...);   // 3 columns; routing badges differ (AUTO / assessor / committee)
+test('diff highlights SafeGuard vs GovHealth', ...);  // entries include claimTypes.DENTAL (removed) and approval threshold (changed)
+test('rollback restores previous behavior', ...);     // amount 22000: under v2 (threshold 25000) → AUTO_APPROVED; rollback to v1 (threshold 20000) → MANUAL assessor
+test('tenant #4 onboards with zero code', ...);       // create via UI → process OUTPATIENT claim → result panel renders
+```
+
+Each `...` is a full Playwright spec using `page.getByRole`/`getByLabel` selectors — write accessible-name selectors, not CSS classes (AntD class names are unstable).
+
+- [ ] **Step 3: Run twice** — `npx playwright test` → 8 passed both runs.
+- [ ] **Step 4: Commit** — `test: Playwright E2E suite for critical admin flows`
+
+### Task 18: Deploy to Vercel + Neon, seed, smoke test
 
 **Files:** Create: `vercel.json` (if needed), README "Deployment" section
 **Verify (on the LIVE URL):** all 6 pages work; reset-demo seeds 3 tenants; the §5 worked example reproduces on `/demo`; create tenant #4 via UI → process a claim against it → **redeploy → tenant #4 still there** (Neon persistence proof).
@@ -694,7 +719,7 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 - [ ] **Step 3:** Execute the live smoke checklist above, including the redeploy-persistence test.
 - [ ] **Step 4:** Commit — `chore: production deployment configuration`
 
-### Task 18: README, writeup, demo script — submission package
+### Task 19: README, writeup, demo script — submission package
 
 **Files:** Rewrite: `README.md`; Create: `docs/WRITEUP.md`, `docs/DEMO_SCRIPT.md`
 **Verify:** a reader can go from zero → running locally in <10 minutes using only README; writeup covers approach, key decisions (cite the Decision Log), trade-offs (no-auth, weekends-only business days), and how AI tools were used; demo script walks: reset → tour 3 tenants → preview → demo page → diff → edit+history+rollback → create tenant #4 → process claim → persistence note.
@@ -710,13 +735,13 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 
 | # | Spec criterion | How verified |
 |---|---|---|
-| 1 | 3 tenants differ on same claim | `/demo` live + seed-tenants.test.ts |
+| 1 | 3 tenants differ on same claim | `/demo` live + seed-tenants.test.ts + E2E demo spec |
 | 2 | Invalid config blocked | schema.test.ts + curl 400 + UI inline errors |
 | 3 | Preview accurate | preview calls `/api/process-claim` (Network tab) |
 | 4 | Diff complete, both directions | diff-configs.test.ts + SafeGuard-vs-GovHealth manual |
 | 5 | History + rollback | Task 13 verify + version rows immutable |
-| 6 | Tenant #4 zero-code + survives restart | Task 17 redeploy test |
+| 6 | Tenant #4 zero-code + survives restart | E2E onboarding spec + Task 18 redeploy test |
 | 7 | processClaim 5 outputs correct | process-claim.test.ts + worked example |
 | 8 | Modularity | one schema/one engine/tab-per-section; writeup section |
 
-Plus: `npm run test` all green · `npx tsc --noEmit` clean · live URL in README · timeline already communicated to recruiter.
+Plus: `npm run test` all green · `npx playwright test` 8/8 green · `npx tsc --noEmit` clean · live URL in README · timeline already communicated to recruiter.

@@ -25,6 +25,7 @@
 - 2026-06-11: Neon chosen for hosted PostgreSQL; Prisma for schema/migrations.
 - 2026-06-11: `processClaim` returns the full lifecycle notification plan (all enabled events), not just `claim_submitted`.
 - 2026-06-11: Scope = all 8 acceptance criteria + selected differentiators (demo page "one claim three fates", business-day unit tests, branding-aware preview, reset/seed) — matches the 10–12h estimate communicated to the recruiter.
+- 2026-06-11: Playwright E2E suite added (8 chromium specs, `workers: 1`, reset-demo in beforeAll) as plan Task 17 — covers admin flows unit tests cannot reach; accessible-name selectors only (AntD class names are unstable).
 
 ## Session Log
 
