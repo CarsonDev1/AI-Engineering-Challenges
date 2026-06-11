@@ -5,10 +5,10 @@
 
 ## Snapshot
 
-- **Phase:** Workflow setup complete → next: product spec (brainstorm)
-- **Active plan:** none yet (created after the product spec is approved)
-- **Last completed:** Session-resilient workflow designed and set up (CLAUDE.md, PROGRESS.md, workflow design doc)
-- **Next up:** Brainstorm and write the product spec for Challenge 15 (config schema, admin UI, runtime engine, deployment)
+- **Phase:** Product spec approved → next: implementation plan (writing-plans)
+- **Active plan:** none yet (next step creates it in `docs/superpowers/plans/`)
+- **Last completed:** Product design spec written and approved (`docs/superpowers/specs/2026-06-11-product-design.md`)
+- **Next up:** Write the implementation plan with per-task `Verify:` criteria, then execute
 - **Blockers / open questions:** none
 
 ## Decision Log
@@ -18,6 +18,13 @@
 - 2026-06-11: Stack: Next.js (App Router) + TypeScript strict + Ant Design + hosted PostgreSQL + Zod shared schemas; deploy on Vercel. Hosted DB chosen because tenant #4 created through the UI must survive restarts/cold starts.
 - 2026-06-11: A single `processClaim` engine powers both runtime and preview mode — two implementations would inevitably drift.
 - 2026-06-11: Karpathy guidelines adopted as engineering discipline; every plan task carries a `Verify:` criterion.
+- 2026-06-11: Tenant config stored as versioned JSONB snapshots (2 tables) — history/diff/rollback become cheap document operations; Zod owns integrity.
+- 2026-06-11: Approval tiers stored as strictly ascending upper bounds (overlap/gap impossible by construction); half-open boundary semantics — a boundary amount belongs to the higher tier; `amount < threshold` auto-approves, so threshold 0 auto-approves nothing.
+- 2026-06-11: One `/api/process-claim` endpoint serves runtime, preview, and demo page — preview accuracy guaranteed by construction.
+- 2026-06-11: No auth (out of challenge scope, documented trade-off); "Reset demo data" re-seed action mitigates public-URL tampering.
+- 2026-06-11: Neon chosen for hosted PostgreSQL; Prisma for schema/migrations.
+- 2026-06-11: `processClaim` returns the full lifecycle notification plan (all enabled events), not just `claim_submitted`.
+- 2026-06-11: Scope = all 8 acceptance criteria + selected differentiators (demo page "one claim three fates", business-day unit tests, branding-aware preview, reset/seed) — matches the 10–12h estimate communicated to the recruiter.
 
 ## Session Log
 
