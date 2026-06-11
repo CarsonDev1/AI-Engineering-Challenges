@@ -5,11 +5,11 @@
 
 ## Snapshot
 
-- **Phase:** Product spec approved → next: implementation plan (writing-plans)
-- **Active plan:** none yet (next step creates it in `docs/superpowers/plans/`)
-- **Last completed:** Product design spec written and approved (`docs/superpowers/specs/2026-06-11-product-design.md`)
-- **Next up:** Write the implementation plan with per-task `Verify:` criteria, then execute
-- **Blockers / open questions:** none
+- **Phase:** Implementation plan ready → next: execute Task 1 (scaffold)
+- **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (18 tasks, 4 milestones, ~12h)
+- **Last completed:** Implementation plan written and self-reviewed
+- **Next up:** Execute Task 1 — scaffold Next.js + toolchain (fresh session recommended for execution)
+- **Blockers / open questions:** Neon account needed at Task 7 (manual step)
 
 ## Decision Log
 
