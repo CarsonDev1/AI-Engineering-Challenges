@@ -60,7 +60,7 @@ export default defineConfig({
 
 Run: `npm run dev` → page on http://localhost:3000. `npm run test` → "no test files found" exit 0. `npx tsc --noEmit` → clean.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** _(`a28c2c0`)_
 
 ```bash
 git add -A && git commit -m "chore: scaffold Next.js + AntD + Zod + Prisma + Vitest toolchain"
@@ -184,7 +184,7 @@ export type TenantConfig = z.infer<typeof tenantConfigSchema>;
 Note: if the installed Zod version lacks `z.partialRecord`, use `z.record(z.enum(...), x).optional()`-style or `z.object({}).catchall()` equivalent — keep the inferred type `Partial<Record<K, V>>`.
 
 - [x] **Step 4: Run — expect all PASS** _(13/13; quality review 2026-06-12: refines carry explicit `path` options and every rejection test asserts `issues[0].path` — locks the error-mapping contract Tasks 9/11 rely on; zod 4: `z.url()` replaces deprecated `z.string().url()`)_
-- [ ] **Step 5: Commit** — `feat: tenant config schema with cross-field validation rules`
+- [x] **Step 5: Commit** _(`9a1eb17`)_ — `feat: tenant config schema with cross-field validation rules`
 
 ### Task 3: Business-day calculator
 
@@ -230,7 +230,7 @@ export function addBusinessDays(dateISO: string, days: number): string {
 ```
 
 - [x] **Step 4: Run — PASS** _(19/19; quality review added a Monday-start case — 6 tests total — and the weekend-start comment)_
-- [ ] **Step 5: Commit** — `feat: business-day calculator`
+- [x] **Step 5: Commit** _(`43d41b5`)_ — `feat: business-day calculator`
 
 ### Task 4: Generic deep-diff utility
 
@@ -286,7 +286,7 @@ export function diffConfigs(left: unknown, right: unknown, base = ''): DiffEntry
 ```
 
 - [x] **Step 4: Run — PASS** _(26/26; quality review added the atomic array-of-objects contract comment + 2 pinning tests — 7 diff tests total)_
-- [ ] **Step 5: Commit** — `feat: generic deep-diff for configs`
+- [x] **Step 5: Commit** _(`ec4ee60`)_ — `feat: generic deep-diff for configs`
 
 ### Task 5: `processClaim` engine
 
@@ -414,7 +414,7 @@ function isTypeValid(type: string, v: unknown, options?: string[]): boolean {
 ```
 
 - [x] **Step 4: Run — PASS** _(38/38; quality review: `isTypeValid` now takes the exported `CustomFieldType` union with an exhaustive `never` default — a new field type fails compilation until validated; `validConfig` extracted to `src/lib/config/fixtures.ts` (kills the test-imports-test double-run); +3 engine tests: invalid number value, select outside options, multi-error accumulation — 12 engine tests total)_
-- [ ] **Step 5: Commit** — `feat: processClaim engine with boundary semantics`
+- [x] **Step 5: Commit** _(`af7f415`)_ — `feat: processClaim engine with boundary semantics`
 
 ### Task 6: Seed data — three tenants + worked-example integration test
 
@@ -458,7 +458,7 @@ describe('seed tenants', () => {
 - [x] **Step 2: Run — FAIL** _(failed correctly: `Cannot find module './seed-tenants'`)_
 - [x] **Step 3: Implement `SEED_TENANTS`** — `readonly SeedTenant[]` (`{ slug, name, config: TenantConfig }`) with the exact spec §11 data: safeguard (threshold 20000; tiers assessor<100000, team_lead<500000, director∞; email all 4 events; SLA OP5/IP10/DENTAL5; employeeId required), healthfirst (all 5 types; threshold 5000; assessor<50000, manager∞; email+sms; SLA 7 all; no custom fields), govhealth (OP+IP; threshold 0; committee∞; email+webhook; SLA 15; department + budgetCode required). Document lists per spec §11 verbatim. _(Decision: all four lifecycle notification events enabled for every tenant — tenants differ only by channel; matches the brief's per-tenant channel descriptions and makes the demo's "same events, different channels" contrast explicit.)_
 
-- [x] **Step 4: Run — PASS** _(suite 41/41; the §5 worked example asserts exactly — SafeGuard AUTO/2026-06-19 · HealthFirst assessor/2026-06-23 · GovHealth committee/2026-07-03 · GovHealth missing both custom fields)_ · **Step 5: Commit** _(pending user approval)_ — `feat: seed tenant configs matching the challenge brief`
+- [x] **Step 4: Run — PASS** _(suite 41/41; the §5 worked example asserts exactly — SafeGuard AUTO/2026-06-19 · HealthFirst assessor/2026-06-23 · GovHealth committee/2026-07-03 · GovHealth missing both custom fields)_ · **Step 5: Commit** _(`ac537ba`)_ — `feat: seed tenant configs matching the challenge brief`
 
 ---
 
@@ -485,7 +485,7 @@ describe('seed tenants', () => {
 
 - [x] **Step 5: `src/lib/db/prisma.ts`** — singleton `PrismaClient({ adapter: new PrismaNeon({ connectionString }) })`, with `neonConfig.webSocketConstructor = ws` and a `DATABASE_URL` presence guard. Import `PrismaClient` from `@/generated/prisma/client`.
 
-- [x] **Step 6: Migrate + generate + verify** — `npx prisma migrate dev --name init` (created `prisma/migrations/20260612085136_init`, applied to Neon over the pooler) → `npx prisma generate` → `tsc --noEmit` clean, suite 41/41, `migrate status` up to date, runtime adapter smoke test returned `{tenants:0, versions:0}`. **Step 7: Commit** _(pending user approval)_ — `feat: prisma 7 schema + neon adapter for tenants and config versions`
+- [x] **Step 6: Migrate + generate + verify** — `npx prisma migrate dev --name init` (created `prisma/migrations/20260612085136_init`, applied to Neon over the pooler) → `npx prisma generate` → `tsc --noEmit` clean, suite 41/41, `migrate status` up to date, runtime adapter smoke test returned `{tenants:0, versions:0}`. **Step 7: Commit** _(`5aeb622`)_ — `feat: prisma 7 schema + neon adapter for tenants and config versions`
 
 ### Task 8: Tenant repository (versioning semantics live here)
 
@@ -539,7 +539,7 @@ export async function listVersions(tenantId: string) {
 }
 ```
 
-- [x] **Step 2: Integration test (RED→GREEN) + typecheck** — wrote the failing test first (`Cannot find module './tenant-repo'`), then implemented. JSON writes use `config as unknown as Prisma.InputJsonValue` (`Prisma` namespace from `@/generated/prisma/client`; `TenantConfig`'s optional fields make it not directly assignable). Verified: integration 1/1 on Neon (~10s), unit suite 41/41, `tsc --noEmit` clean. **Step 3: Commit** _(pending user approval)_ — `feat: tenant repository with forward-only versioning`
+- [x] **Step 2: Integration test (RED→GREEN) + typecheck** — wrote the failing test first (`Cannot find module './tenant-repo'`), then implemented. JSON writes use `config as unknown as Prisma.InputJsonValue` (`Prisma` namespace from `@/generated/prisma/client`; `TenantConfig`'s optional fields make it not directly assignable). Verified: integration 1/1 on Neon (~10s), unit suite 41/41, `tsc --noEmit` clean. **Step 3: Commit** _(`e3baa25`)_ — `feat: tenant repository with forward-only versioning`
 
 ### Task 9: API route handlers (server-side validation chokepoint)
 
@@ -601,7 +601,7 @@ curl -s -X POST localhost:3000/api/process-claim -H "Content-Type: application/j
 # PUT config with threshold -5 → 400 with Zod issues
 ```
 
-- [x] **Step 3: Commit** _(pending user approval)_ — `feat: REST API with server-side Zod validation` _(closes M2)_
+- [x] **Step 3: Commit** _(`9df7bf9`)_ — `feat: REST API with server-side Zod validation` _(closes M2)_
 
 ---
 
@@ -621,7 +621,7 @@ UI tasks share these conventions: client components under `src/components/`, Ant
 - [x] **Step 1: Design foundation** — palette/atmosphere in `globals.css`, AntD theme tokens, fonts, `Providers` (ConfigProvider + App) + AntdRegistry + `AppHeader` (Keystone wordmark) in `layout.tsx`.
 - [x] **Step 2: Tenant list** — home page (client) fetches `/api/tenants`, renders branding-tinted `TenantCard`s (name, slug, enabled-type tags, Edit/Preview/History links — those pages land in Tasks 11–13), with a loading + empty state. `CreateTenantModal` asks name + slug only and posts `defaultTenantConfig()` (OUTPATIENT enabled, threshold 0, single tier `assessor`/∞, claim_submitted email, SLA 5, no custom fields; schema-validity pinned by a unit test). Reset-demo confirms, re-seeds, refetches. Slug-conflict (409) surfaces inline.
 - [x] **Step 3: Playwright** — harness + 3 specs, all green; AntD `Input addonBefore` deprecation fixed (→ `prefix`); `react-hooks/set-state-in-effect` false-positive on the deferred mount-fetch disabled with a justification.
-- [x] **Step 4: Commit** _(pending user approval)_ — `feat: tenant list page with create and reset-demo`
+- [x] **Step 4: Commit** _(`63dffb7`)_ — `feat: tenant list page with create and reset-demo`
 
 ### Task 11: Config editor — six tabs
 
@@ -638,7 +638,9 @@ Form-to-schema mapping (exact fields per tab):
 
 State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits a slice; Save runs `tenantConfigSchema.safeParse` first, maps `error.issues[].path` to tab + field highlights.
 
-- [ ] Commit — `feat: six-tab tenant config editor with client-side validation`
+> **Implemented (2026-06-12).** `ConfigEditor` holds the draft + a normalized issue list (`issues.ts` stringifies paths so client safeParse issues and the server's 400 issues map to fields identically); tab labels show per-section error badges; after the first failed save the draft re-validates on every change so errors clear as fixed. Editor-level decisions: (1) toggling a claim type syncs SLA — enabling seeds a 5-business-day default, disabling removes the entry (the SLA tab only shows enabled types, so a stale entry would be invisible-but-invalid); (2) enabling a never-configured notification event starts with zero channels — the inline "needs at least one channel" error makes the admin choose explicitly instead of the UI inventing a default; (3) tier ascending order gets immediate feedback while typing (the plan's "live" check); everything else validates on save. Verified: `tsc` + `lint` clean, unit 48, **Playwright 5/5** (added "editor saves a new config version with a note" asserting the v2 toast, and "invalid config is blocked inline" asserting the toast + inline error + version count still 1 server-side); screenshots of Branding / Claim Types / Approval confirm the brand match.
+
+- [x] Commit _(`4f50232`; follow-ups same session: responsive pass `1111e66`, full-feature e2e sweep + DB-relative counts)_ — `feat: six-tab tenant config editor with client-side validation`
 
 ### Task 12: Preview page (branding-aware)
 

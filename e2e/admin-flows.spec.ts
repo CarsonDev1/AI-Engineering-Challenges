@@ -6,21 +6,33 @@ test.beforeAll(async ({ request }) => {
   await request.post('/api/reset-demo');
 });
 
-test('home lists the three seeded tenants', async ({ page }) => {
+const SEED_SLUGS = ['safeguard', 'healthfirst', 'govhealth'];
+
+// The database may legitimately hold tenants beyond the three seeds (a reset must
+// preserve them), so counts are asserted relative to the API, never as absolutes.
+test('home lists the three seeded tenants', async ({ page, request }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Tenant Configurations' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'SafeGuard Insurance' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'HealthFirst' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'GovHealth' })).toBeVisible();
-  await expect(page.getByTestId('tenant-card')).toHaveCount(3);
+  const tenants = (await (await request.get('/api/tenants')).json()) as unknown[];
+  await expect(page.getByTestId('tenant-card')).toHaveCount(tenants.length);
 });
 
-test('reset demo restores exactly the three samples', async ({ page }) => {
+test('reset demo restores the three samples and preserves other tenants', async ({ page, request }) => {
+  const before = (await (await request.get('/api/tenants')).json()) as Array<{ slug: string }>;
+  const extras = before.filter((t) => !SEED_SLUGS.includes(t.slug));
+
   await page.goto('/');
   await page.getByRole('button', { name: 'Reset demo data' }).click();
   await page.getByRole('button', { name: 'Reset', exact: true }).click(); // confirm dialog
   await expect(page.getByText('Demo data reset')).toBeVisible();
-  await expect(page.getByTestId('tenant-card')).toHaveCount(3);
+
+  const after = (await (await request.get('/api/tenants')).json()) as Array<{ slug: string }>;
+  for (const slug of SEED_SLUGS) expect(after.filter((t) => t.slug === slug)).toHaveLength(1);
+  expect(after).toHaveLength(extras.length + SEED_SLUGS.length);
+  await expect(page.getByTestId('tenant-card')).toHaveCount(after.length);
 });
 
 test('editor saves a new config version with a note', async ({ page }) => {
@@ -63,6 +75,7 @@ test('invalid config is blocked inline by client validation', async ({ page, req
 });
 
 test('onboard a 4th tenant through the modal, zero code', async ({ page, request }) => {
+  const before = (await (await request.get('/api/tenants')).json()) as unknown[];
   await page.goto('/');
   const slug = `e2e-${Date.now()}`;
 
@@ -72,7 +85,7 @@ test('onboard a 4th tenant through the modal, zero code', async ({ page, request
   await page.getByRole('button', { name: 'Create tenant' }).click();
 
   await expect(page.getByRole('heading', { name: 'E2E Test Insurer' })).toBeVisible();
-  await expect(page.getByTestId('tenant-card')).toHaveCount(4);
+  await expect(page.getByTestId('tenant-card')).toHaveCount(before.length + 1);
 
   // Clean up so the database returns to the three samples.
   const list = (await (await request.get('/api/tenants')).json()) as Array<{ id: string; slug: string }>;
