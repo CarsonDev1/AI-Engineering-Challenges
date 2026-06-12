@@ -611,11 +611,17 @@ UI tasks share these conventions: client components under `src/components/`, Ant
 
 ### Task 10: App shell + tenant list + create + reset demo
 
-**Files:** Create: `src/app/layout.tsx` (AntD registry/provider), `src/app/page.tsx`, `src/components/TenantCard.tsx`, `src/components/CreateTenantModal.tsx`
-**Verify:** `/` lists 3 seeded tenants as cards tinted with each tenant's `primaryColor`; Create modal makes tenant with a minimal valid default config; Reset Demo restores the 3 seeds and leaves other tenants untouched.
+**Files:** Modify: `src/app/layout.tsx` (fonts + AntdRegistry + Providers + header), `src/app/globals.css` (design system), `src/app/page.tsx` (home); Create: `src/app/providers.tsx`, `src/lib/ui/theme.ts`, `src/components/{AppHeader,TenantCard,CreateTenantModal}.tsx`, `src/lib/config/default-config.ts` (+ `.test.ts`); plus the Playwright harness (`playwright.config.ts`, `e2e/admin-flows.spec.ts`).
+**Verify:** `tsc` + `lint` clean, unit suite 48; **Playwright (`npm run test:e2e`) 3/3**: home lists the three seeds · reset restores exactly 3 · onboard a 4th via the modal (zero code) then clean up; screenshot confirms the rendered design.
 
-- [ ] Tenant card shows: name, slug, enabled claim types as tags, links Edit/Preview/History. Create modal asks name + slug only and posts a sane default config (OUTPATIENT enabled, threshold 0, single tier `assessor`/∞, claim_submitted email, SLA 5, no custom fields) — everything else is edited later in the editor.
-- [ ] Commit — `feat: tenant list page with create and reset-demo`
+> **Design decision (2026-06-12):** the UI matches **Papaya's own brand** (the company this serves). The palette was extracted from papaya.asia (via the browser): clean white surfaces, near-black ink, **papaya pink `#ED1B55`** primary accent, neutral grays, and a decorative peach→pink→violet gradient; **Plus Jakarta Sans** (their typeface) for UI + display, IBM Plex Mono for ledger figures; pill badges, flat/minimal, 8px radii — Papaya's "header format" (pink rounded badge + bold wordmark, pink-pill eyebrow, pink CTA). Each tenant's `primaryColor` still supplies per-tenant chroma (card spine + chips). AntD re-themed via `ConfigProvider` tokens (`src/lib/ui/theme.ts`) + `@ant-design/nextjs-registry` for SSR styles. _(An earlier "Operational Ledger" warm-paper/oxblood/serif draft was replaced on the same uncommitted task once the brand-match was requested.)_
+>
+> **Process decision (2026-06-12):** per the user's instruction, **Playwright was pulled forward** from Task 17 to run per-UI-task. It lives in `e2e/` with its own config (chromium, `workers: 1`, reset-demo in `beforeAll`, accessible-name/role selectors), `npm run test:e2e`, and is excluded from the unit/integration suites. UI verification = typecheck + lint + e2e + a screenshot.
+
+- [x] **Step 1: Design foundation** — palette/atmosphere in `globals.css`, AntD theme tokens, fonts, `Providers` (ConfigProvider + App) + AntdRegistry + `AppHeader` (Keystone wordmark) in `layout.tsx`.
+- [x] **Step 2: Tenant list** — home page (client) fetches `/api/tenants`, renders branding-tinted `TenantCard`s (name, slug, enabled-type tags, Edit/Preview/History links — those pages land in Tasks 11–13), with a loading + empty state. `CreateTenantModal` asks name + slug only and posts `defaultTenantConfig()` (OUTPATIENT enabled, threshold 0, single tier `assessor`/∞, claim_submitted email, SLA 5, no custom fields; schema-validity pinned by a unit test). Reset-demo confirms, re-seeds, refetches. Slug-conflict (409) surfaces inline.
+- [x] **Step 3: Playwright** — harness + 3 specs, all green; AntD `Input addonBefore` deprecation fixed (→ `prefix`); `react-hooks/set-state-in-effect` false-positive on the deferred mount-fetch disabled with a justification.
+- [x] **Step 4: Commit** _(pending user approval)_ — `feat: tenant list page with create and reset-demo`
 
 ### Task 11: Config editor — six tabs
 

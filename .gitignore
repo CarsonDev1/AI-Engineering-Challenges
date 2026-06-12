@@ -32,6 +32,11 @@ pnpm-debug.log*
 # prisma (generated client — regenerated on install via the postinstall script)
 /src/generated/
 
+# playwright
+/playwright-report/
+/test-results/
+/.playwright/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
