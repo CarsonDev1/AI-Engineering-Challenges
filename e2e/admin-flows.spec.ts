@@ -23,6 +23,45 @@ test('reset demo restores exactly the three samples', async ({ page }) => {
   await expect(page.getByTestId('tenant-card')).toHaveCount(3);
 });
 
+test('editor saves a new config version with a note', async ({ page }) => {
+  await page.goto('/');
+  await page
+    .getByTestId('tenant-card')
+    .filter({ hasText: 'SafeGuard Insurance' })
+    .getByRole('link', { name: 'Edit' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'SafeGuard Insurance' })).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Approval' }).click();
+  await page.getByLabel('Auto-approval threshold').fill('25000');
+  await page.getByPlaceholder('Version note (optional)').fill('raise auto-approval to 25k');
+  await page.getByRole('button', { name: 'Save configuration' }).click();
+
+  await expect(page.getByText('Saved as version 2')).toBeVisible();
+});
+
+test('invalid config is blocked inline by client validation', async ({ page, request }) => {
+  await page.goto('/');
+  await page
+    .getByTestId('tenant-card')
+    .filter({ hasText: 'HealthFirst' })
+    .getByRole('link', { name: 'Edit' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'HealthFirst' })).toBeVisible();
+
+  await page.getByLabel('Company name').fill('');
+  await page.getByRole('button', { name: 'Save configuration' }).click();
+
+  await expect(page.getByText('Fix the highlighted fields before saving.')).toBeVisible();
+  await expect(page.getByTestId('field-error').first()).toBeVisible();
+
+  // The save never reached the server — HealthFirst still has only its seed version.
+  const tenants = (await (await request.get('/api/tenants')).json()) as Array<{ id: string; slug: string }>;
+  const healthfirst = tenants.find((t) => t.slug === 'healthfirst')!;
+  const versions = (await (await request.get(`/api/tenants/${healthfirst.id}/versions`)).json()) as unknown[];
+  expect(versions).toHaveLength(1);
+});
+
 test('onboard a 4th tenant through the modal, zero code', async ({ page, request }) => {
   await page.goto('/');
   const slug = `e2e-${Date.now()}`;
