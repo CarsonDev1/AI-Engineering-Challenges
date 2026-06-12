@@ -7,8 +7,8 @@
 
 - **Phase:** Executing M1 (domain core, TDD) — Task 2 of 6 done
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 4 — generic deep-diff (`diffConfigs`: dotted paths, both directions, arrays atomic), 7 tests; suite 26/26
-- **Next up:** Task 5 — `processClaim` engine (TDD); Task 4 commit pending user approval
+- **Last completed:** Task 5 — `processClaim` engine (strict-< threshold, half-open tiers, error accumulation, full notification plan), 12 tests; suite 38/38
+- **Next up:** Task 6 — seed tenants + worked-example integration test (closes M1); Task 5 commit pending user approval
 - **Blockers / open questions:** none — Neon project created, `DATABASE_URL` in local `.env` (gitignored)
 
 ## Decision Log
@@ -33,6 +33,8 @@
 - 2026-06-12: Every schema refinement carries an explicit issue `path` (section/field level), and rejection tests assert `issues[0].path` — this is the error-mapping contract: editor tabs (Task 11) and API 400 bodies (Task 9) locate errors by path, so `path: []` issues are banned.
 - 2026-06-12: Claim-input shape is validated with Zod at the API boundary (Task 9), not inside the engine — `processClaim` stays a pure function trusting its typed contract; malformed bodies (garbage `submittedAt`, missing `customFieldValues`) get a 400, never a 500.
 - 2026-06-12: Diff treats arrays as atomic leaves (JSON.stringify equality) — element-wise array diffing is out of scope; safe because both diff inputs are always Postgres JSONB reads (consistent key serialization), a precondition documented in the module comment and pinned by tests.
+- 2026-06-12: Custom-field types are a named exported enum (`CUSTOM_FIELD_TYPES`/`CustomFieldType`) and the engine's type-validation switch is exhaustive with a `never` default — adding a new field type to the schema fails compilation until its validation is written (silent accept-as-text is impossible).
+- 2026-06-12: Shared test fixture `validConfig` lives in `src/lib/config/fixtures.ts` (not in a test file) — importing from test files makes vitest re-execute the imported suite (observed: 48 reported tests instead of 35) and the pattern compounds; test files are not importable modules in this repo.
 
 ## Session Log
 

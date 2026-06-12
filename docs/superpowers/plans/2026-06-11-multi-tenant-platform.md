@@ -293,7 +293,7 @@ export function diffConfigs(left: unknown, right: unknown, base = ''): DiffEntry
 **Files:** Create: `src/lib/engine/process-claim.ts`, `src/lib/engine/process-claim.test.ts`
 **Verify:** all boundary cases below pass, including the spec's worked example numbers.
 
-- [ ] **Step 1: Failing tests** (uses `validConfig` exported from schema.test or a local fixture; threshold 20000, tiers assessor<100000/director∞, OUTPATIENT enabled, SLA 5, employeeId required)
+- [x] **Step 1: Failing tests** (uses `validConfig` exported from schema.test or a local fixture; threshold 20000, tiers assessor<100000/director∞, OUTPATIENT enabled, SLA 5, employeeId required)
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -344,8 +344,8 @@ describe('processClaim', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**
-- [ ] **Step 3: Implement**
+- [x] **Step 2: Run — FAIL**
+- [x] **Step 3: Implement**
 
 ```ts
 import type { TenantConfig, ClaimType } from '../config/schema';
@@ -413,7 +413,8 @@ function isTypeValid(type: string, v: unknown, options?: string[]): boolean {
 }
 ```
 
-- [ ] **Step 4: Run — PASS** · **Step 5: Commit** — `feat: processClaim engine with boundary semantics`
+- [x] **Step 4: Run — PASS** _(38/38; quality review: `isTypeValid` now takes the exported `CustomFieldType` union with an exhaustive `never` default — a new field type fails compilation until validated; `validConfig` extracted to `src/lib/config/fixtures.ts` (kills the test-imports-test double-run); +3 engine tests: invalid number value, select outside options, multi-error accumulation — 12 engine tests total)_
+- [ ] **Step 5: Commit** — `feat: processClaim engine with boundary semantics`
 
 ### Task 6: Seed data — three tenants + worked-example integration test
 

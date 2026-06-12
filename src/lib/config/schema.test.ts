@@ -1,14 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tenantConfigSchema } from './schema';
-
-export const validConfig = {
-  branding: { companyName: 'SafeGuard Insurance', logoUrl: 'https://example.com/logo.png', primaryColor: '#1677ff', secondaryColor: '#f0f5ff' },
-  claimTypes: { OUTPATIENT: { enabled: true, requiredDocuments: ['Medical receipt'], optionalDocuments: ['Prescription'] } },
-  approval: { autoApprovalThreshold: 20000, tiers: [{ upTo: 100000, role: 'assessor' }, { upTo: null, role: 'director' }] },
-  notifications: { claim_submitted: { enabled: true, channels: ['email'] } },
-  sla: { businessDaysByClaimType: { OUTPATIENT: 5 }, escalation: { notifyRole: 'operations_manager' } },
-  customFields: [{ key: 'employeeId', label: 'Employee ID', type: 'text', required: true }],
-};
+import { validConfig } from './fixtures';
 
 const invalid = (patch: object) => tenantConfigSchema.safeParse({ ...structuredClone(validConfig), ...patch });
 

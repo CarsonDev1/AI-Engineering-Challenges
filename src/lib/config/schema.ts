@@ -3,7 +3,9 @@ import { z } from 'zod';
 export const CLAIM_TYPES = ['OUTPATIENT', 'INPATIENT', 'DENTAL', 'MATERNITY', 'OPTICAL'] as const;
 export const NOTIFICATION_EVENTS = ['claim_submitted', 'approved', 'rejected', 'payment_sent'] as const;
 export const CHANNELS = ['email', 'sms', 'webhook'] as const;
+export const CUSTOM_FIELD_TYPES = ['text', 'number', 'date', 'select'] as const;
 export type ClaimType = (typeof CLAIM_TYPES)[number];
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex color like #1677ff');
 
@@ -23,7 +25,7 @@ const customField = z
   .object({
     key: z.string().min(1),
     label: z.string().min(1),
-    type: z.enum(['text', 'number', 'date', 'select']),
+    type: z.enum(CUSTOM_FIELD_TYPES),
     required: z.boolean(),
     options: z.array(z.string().min(1)).optional(),
   })
