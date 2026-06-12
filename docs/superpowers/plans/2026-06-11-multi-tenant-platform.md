@@ -237,7 +237,7 @@ export function addBusinessDays(dateISO: string, days: number): string {
 **Files:** Create: `src/lib/diff/diff-configs.ts`, `src/lib/diff/diff-configs.test.ts`
 **Verify:** nested added/removed/changed reported in both directions with dotted paths.
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -261,8 +261,8 @@ describe('diffConfigs', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**
-- [ ] **Step 3: Implement**
+- [x] **Step 2: Run — FAIL**
+- [x] **Step 3: Implement**
 
 ```ts
 export type DiffEntry = { path: string; kind: 'added' | 'removed' | 'changed'; left?: unknown; right?: unknown };
@@ -285,7 +285,8 @@ export function diffConfigs(left: unknown, right: unknown, base = ''): DiffEntry
 }
 ```
 
-- [ ] **Step 4: Run — PASS** · **Step 5: Commit** — `feat: generic deep-diff for configs`
+- [x] **Step 4: Run — PASS** _(26/26; quality review added the atomic array-of-objects contract comment + 2 pinning tests — 7 diff tests total)_
+- [ ] **Step 5: Commit** — `feat: generic deep-diff for configs`
 
 ### Task 5: `processClaim` engine
 
