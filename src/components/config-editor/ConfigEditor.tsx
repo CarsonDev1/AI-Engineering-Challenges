@@ -149,12 +149,12 @@ export function ConfigEditor({ tenantId, tenantName, slug, initialConfig }: Prop
             processes claims with the latest one.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+        <div className="page-head__actions">
           <Input
             placeholder="Version note (optional)"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            style={{ width: 260 }}
+            style={{ width: 260, maxWidth: '100%' }}
           />
           <Button type="primary" onClick={save} loading={saving}>
             Save configuration

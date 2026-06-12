@@ -57,7 +57,7 @@ export default function HomePage() {
             active config.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+        <div className="page-head__actions">
           <Button onClick={resetDemo} loading={resetting}>
             Reset demo data
           </Button>
