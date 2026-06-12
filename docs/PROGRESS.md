@@ -5,10 +5,10 @@
 
 ## Snapshot
 
-- **Phase:** Executing M2 (persistence + API) — Tasks 7 & 8 of 3 done; Task 9 next
+- **Phase:** M2 (persistence + API) **complete — 3 of 3 tasks done**; next milestone M3 (admin UI, Ant Design)
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 8 — `src/lib/db/tenant-repo.ts` (forward-only versioning: `createVersion`/`getActiveConfig`/`rollbackToVersion`/`listVersions`/`createTenant`/`listTenants`) + a dedicated **integration test** on Neon (RED→GREEN). Verified: `npm run test:integration` 1/1 (~10s), unit suite 41/41 (integration excluded — stays pure/offline), `tsc --noEmit` clean. Task 7 committed & pushed (HEAD `07e1cf2`, incl. README rewrite); Task 8 commit pending user approval.
-- **Next up:** Task 9 — API route handlers: the server-side Zod-validation chokepoint (config save → 400 with issues even bypassing UI), the single `process-claim` endpoint (runtime + preview + demo), CRUD/versions/rollback wrappers, and `reset-demo` (seeds the 3 sample tenants).
+- **Last completed:** Task 9 — 7 API route handlers (tenants CRUD · config PUT (Zod chokepoint) · versions · rollback · single `process-claim` · `reset-demo`), `claimInputSchema` (TDD'd, 5 tests), and repo helpers (`getTenant`/`deleteTenant`/`reseedDemoTenants`). Verified end-to-end on the real Next 16 server + Neon (reset seeds 3 · worked example for safeguard+govhealth · invalid config→400 with issues · malformed claim→400). `tsc --noEmit` clean, unit suite **46**. Task 8 committed & pushed (HEAD `e3baa25`); Task 9 commit pending user approval.
+- **Next up:** Task 10 — app shell (AntD `App`/`ConfigProvider` in `layout.tsx`) + tenant list page (`/`) with branding-tinted cards, Create-tenant modal, and a Reset-demo button. Starts M3.
 - **Blockers / open questions:** none. (`@prisma/streams-local` warns it wants Node ≥22; we're on Node 20.19 — only affects `prisma dev`'s local server, not migrate/generate/runtime. Revisit if Vercel build complains.)
 
 ## Decision Log
@@ -41,6 +41,8 @@
 - 2026-06-12: Chose **`@prisma/adapter-neon`** (Neon serverless driver over WS/HTTP) over `@prisma/adapter-pg` — it is the idiomatic Vercel+Neon serverless path, sidesteps PgBouncer transaction-mode pitfalls on the pooled connection, and matches why Neon was chosen. Cost: extra deps `@neondatabase/serverless` + `ws` (Node < 22 has no global `WebSocket`, so `neonConfig.webSocketConstructor = ws`) + `dotenv` (for `prisma.config.ts`).
 - 2026-06-12: Generated Prisma client is **gitignored** (`/src/generated/`) and rebuilt by a `postinstall: prisma generate` script — keeps the repo free of generated code, prevents drift, and guarantees Vercel builds against a fresh client. `DATABASE_URL` is the Neon **pooled** connection (`-pooler` host); the initial migration applied cleanly over it, so no separate `DIRECT_URL` is needed at this size.
 - 2026-06-12: The bug-prone versioning/rollback semantics (spec §10) get a **dedicated integration test** against real Neon, rather than only the plan's indirect Task-9 API coverage. It lives in `*.integration.test.ts`, is **excluded from `npm run test`** (which stays pure/offline/deterministic — 41 unit tests), and runs via `npm run test:integration` (own config: `dotenv` setup, serial, 30s timeout for cross-region WS round-trips; scratch `__itest_tenant` cleaned up in `afterAll`). This keeps TDD discipline on the riskiest logic without coupling the unit suite to the network.
+- 2026-06-12: API claim-input validation lives in `src/lib/engine/claim-input.ts` (`claimInputSchema`), TDD'd as the one new bit of `lib/` logic; the `process-claim` route parses the body with it before calling the engine, so malformed input (garbage `submittedAt`, non-numeric `amount`, missing `customFieldValues`) returns 400, never a 500 — the engine stays a pure function trusting its typed contract.
+- 2026-06-12: The 7 route handlers are thin glue over the already-tested engine/repo, so they are verified by an **end-to-end script against `next dev` + Neon** (real Next 16 routing/runtime) rather than unit-mocked — this catches Next-16-specific issues (async `params`, route registration) that mocks would miss; flow/UI coverage comes later from Playwright (Task 17). Next 16 route specifics confirmed from `node_modules/next/dist/docs` per AGENTS.md.
 
 ## Session Log
 

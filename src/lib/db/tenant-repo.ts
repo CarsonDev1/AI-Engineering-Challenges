@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { Prisma } from '@/generated/prisma/client';
 import type { TenantConfig } from '../config/schema';
+import { SEED_TENANTS } from '../config/seed-tenants';
 
 // TenantConfig has optional fields, so it is not directly assignable to Prisma's
 // InputJsonValue (which forbids `undefined`); the configs written here are always
@@ -62,4 +63,23 @@ export async function listVersions(tenantId: string) {
     where: { tenantId },
     orderBy: { versionNo: 'desc' },
   });
+}
+
+export async function getTenant(tenantId: string) {
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  if (!tenant) return null;
+  return { ...tenant, activeConfig: await getActiveConfig(tenant.id) };
+}
+
+export async function deleteTenant(tenantId: string) {
+  await prisma.tenant.delete({ where: { id: tenantId } });
+}
+
+// Re-seed only the three demo tenants (delete by slug + recreate from SEED_TENANTS).
+// Any other tenant — e.g. a 4th onboarded through the UI — is left untouched, so it
+// survives a demo reset.
+export async function reseedDemoTenants() {
+  await prisma.tenant.deleteMany({ where: { slug: { in: SEED_TENANTS.map((t) => t.slug) } } });
+  for (const t of SEED_TENANTS) await createTenant(t.slug, t.name, t.config);
+  return listTenants();
 }

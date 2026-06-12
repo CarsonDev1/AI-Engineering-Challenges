@@ -543,10 +543,14 @@ export async function listVersions(tenantId: string) {
 
 ### Task 9: API route handlers (server-side validation chokepoint)
 
-**Files:** Create: `src/app/api/tenants/route.ts`, `src/app/api/tenants/[id]/route.ts`, `src/app/api/tenants/[id]/config/route.ts`, `src/app/api/tenants/[id]/versions/route.ts`, `src/app/api/tenants/[id]/rollback/route.ts`, `src/app/api/process-claim/route.ts`, `src/app/api/reset-demo/route.ts`
-**Verify:** curl sequence below returns expected statuses/bodies; invalid config → 400 with Zod issues even when sent directly (bypassing UI).
+**Files:** Create: the 7 `src/app/api/.../route.ts` handlers, `src/lib/engine/claim-input.ts` (+ `.test.ts`); Modify: `src/lib/db/tenant-repo.ts` (added `getTenant`, `deleteTenant`, `reseedDemoTenants`).
+**Verify:** the real Next 16 dev server + Neon pass an end-to-end check (a throwaway node fetch script): reset-demo seeds 3 · process-claim reproduces the worked example for two tenants (AUTO/2026-06-19 and committee/2026-07-03 — different fates, same claim) · invalid config → 400 with Zod issues bypassing the UI · malformed claim → 400 not 500. `tsc --noEmit` clean, unit suite 46.
 
-- [ ] **Step 1: Implement handlers.** Pattern (config save — the critical one):
+> **Next 16 note:** route handlers consulted `node_modules/next/dist/docs` per AGENTS.md — handlers are `export async function METHOD(req, ctx)`, dynamic params are a **Promise** (`await ctx.params`), `NextResponse.json`, uncached by default. Params typed explicitly (`{ params: Promise<{ id: string }> }`) so `tsc` doesn't depend on Next's generated route types.
+>
+> **Test-strategy note:** the claim-input Zod schema (the one new bit of `lib/` logic — guards the engine's input contract at the boundary) is TDD'd as a unit (5 tests). The route handlers themselves are thin glue over the already-tested engine/repo, so they are verified at runtime via the end-to-end script rather than unit-mocked; deeper UI/flow coverage comes from the Playwright suite (Task 17).
+
+- [x] **Step 1: Implement handlers + `claimInputSchema` + repo helpers.** Pattern (config save — the critical one):
 
 ```ts
 // src/app/api/tenants/[id]/config/route.ts
@@ -586,7 +590,7 @@ export async function POST(req: NextRequest) {
 `reset-demo`: upserts ONLY the 3 seed tenants (delete by slug + recreate from `SEED_TENANTS`); never touches other tenants — any additionally onboarded tenant (e.g. tenant #4) must survive a reset.
 Remaining handlers: `GET/POST /api/tenants` (create validates config with schema too), `GET/DELETE /api/tenants/[id]`, `GET .../versions`, `POST .../rollback { versionId }` — all thin wrappers over the repo.
 
-- [ ] **Step 2: Verify with curl** (`npm run dev` running):
+- [x] **Step 2: Verify end-to-end** — passed via a throwaway node fetch script against `next dev` + Neon (all 6 checks green; see the Verify line). Original curl recipe (equivalent):
 
 ```powershell
 curl -s -X POST localhost:3000/api/reset-demo                                    # → 3 tenants
@@ -597,7 +601,7 @@ curl -s -X POST localhost:3000/api/process-claim -H "Content-Type: application/j
 # PUT config with threshold -5 → 400 with Zod issues
 ```
 
-- [ ] **Step 3: Commit** — `feat: REST API with server-side Zod validation`
+- [x] **Step 3: Commit** _(pending user approval)_ — `feat: REST API with server-side Zod validation` _(closes M2)_
 
 ---
 
