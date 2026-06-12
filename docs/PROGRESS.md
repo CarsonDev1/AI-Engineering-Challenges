@@ -7,8 +7,8 @@
 
 - **Phase:** Executing M1 (domain core, TDD) — Task 2 of 6 done
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 2 — tenant config Zod schema, 9 rules / 13 tests green, tsc clean; issue paths locked as the UI/API error-mapping contract
-- **Next up:** Task 3 — business-day calculator (TDD); Task 2 commit pending user approval
+- **Last completed:** Task 3 — business-day calculator (`addBusinessDays`, UTC-only, weekend-skip), 6 tests incl. Sat/Sun/Mon starts; suite 19/19
+- **Next up:** Task 4 — generic deep-diff utility (TDD); Task 3 commit pending user approval
 - **Blockers / open questions:** none — Neon project created, `DATABASE_URL` in local `.env` (gitignored)
 
 ## Decision Log
@@ -31,6 +31,7 @@
 - 2026-06-12: Next 16 scaffold's `AGENTS.md` kept — it points agents at `node_modules/next/dist/docs/` for post-training-cutoff API changes; UI/API tasks must consult those docs.
 - 2026-06-12: Validation rule 9 added to spec §8 and plan Task 2 — `autoApprovalThreshold` must be strictly below the first tier's upper bound (when bounded); at/above it the first tier is unreachable (dead config the admin almost certainly didn't intend).
 - 2026-06-12: Every schema refinement carries an explicit issue `path` (section/field level), and rejection tests assert `issues[0].path` — this is the error-mapping contract: editor tabs (Task 11) and API 400 bodies (Task 9) locate errors by path, so `path: []` issues are banned.
+- 2026-06-12: Claim-input shape is validated with Zod at the API boundary (Task 9), not inside the engine — `processClaim` stays a pure function trusting its typed contract; malformed bodies (garbage `submittedAt`, missing `customFieldValues`) get a 400, never a 500.
 
 ## Session Log
 

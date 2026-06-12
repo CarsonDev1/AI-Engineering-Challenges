@@ -191,7 +191,7 @@ Note: if the installed Zod version lacks `z.partialRecord`, use `z.record(z.enum
 **Files:** Create: `src/lib/engine/business-days.ts`, `src/lib/engine/business-days.test.ts`
 **Verify:** Friday + 5 → next Friday; Saturday submission counts from Monday; 15-day span crosses 3 weekends.
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -211,8 +211,8 @@ describe('addBusinessDays', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**
-- [ ] **Step 3: Implement**
+- [x] **Step 2: Run — FAIL**
+- [x] **Step 3: Implement**
 
 ```ts
 // Counts forward `days` business days from dateISO (YYYY-MM-DD), skipping Sat/Sun.
@@ -229,7 +229,8 @@ export function addBusinessDays(dateISO: string, days: number): string {
 }
 ```
 
-- [ ] **Step 4: Run — PASS** · **Step 5: Commit** — `feat: business-day calculator`
+- [x] **Step 4: Run — PASS** _(19/19; quality review added a Monday-start case — 6 tests total — and the weekend-start comment)_
+- [ ] **Step 5: Commit** — `feat: business-day calculator`
 
 ### Task 4: Generic deep-diff utility
 
@@ -598,6 +599,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(processClaim(config, claim));
 }
 ```
+
+`process-claim` must Zod-validate the claim body shape BEFORE calling the engine (`claimType` enum, `amount` number, `submittedAt` `/^\d{4}-\d{2}-\d{2}$/`, `customFieldValues` record defaulting to `{}`) → 400 on malformed input. _(Added 2026-06-12: garbage `submittedAt` or a missing `customFieldValues` posted directly to the API would otherwise throw inside the engine → 500. Engine preconditions are enforced at the API boundary — the engine stays pure and trusts its typed contract.)_
 
 `reset-demo`: upserts ONLY the 3 seed tenants (delete by slug + recreate from `SEED_TENANTS`); never touches other tenants — a grader-created tenant #4 must survive a reset.
 Remaining handlers: `GET/POST /api/tenants` (create validates config with schema too), `GET/DELETE /api/tenants/[id]`, `GET .../versions`, `POST .../rollback { versionId }` — all thin wrappers over the repo.
