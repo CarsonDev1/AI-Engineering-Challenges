@@ -602,7 +602,7 @@ export async function POST(req: NextRequest) {
 
 `process-claim` must Zod-validate the claim body shape BEFORE calling the engine (`claimType` enum, `amount` number, `submittedAt` `/^\d{4}-\d{2}-\d{2}$/`, `customFieldValues` record defaulting to `{}`) → 400 on malformed input. _(Added 2026-06-12: garbage `submittedAt` or a missing `customFieldValues` posted directly to the API would otherwise throw inside the engine → 500. Engine preconditions are enforced at the API boundary — the engine stays pure and trusts its typed contract.)_
 
-`reset-demo`: upserts ONLY the 3 seed tenants (delete by slug + recreate from `SEED_TENANTS`); never touches other tenants — a grader-created tenant #4 must survive a reset.
+`reset-demo`: upserts ONLY the 3 seed tenants (delete by slug + recreate from `SEED_TENANTS`); never touches other tenants — any additionally onboarded tenant (e.g. tenant #4) must survive a reset.
 Remaining handlers: `GET/POST /api/tenants` (create validates config with schema too), `GET/DELETE /api/tenants/[id]`, `GET .../versions`, `POST .../rollback { versionId }` — all thin wrappers over the repo.
 
 - [ ] **Step 2: Verify with curl** (`npm run dev` running):
@@ -732,7 +732,7 @@ Each `...` is a full Playwright spec using `page.getByRole`/`getByLabel` selecto
 **Verify:** a reader can go from zero → running locally in <10 minutes using only README; writeup covers approach, key decisions (cite the Decision Log), trade-offs (no-auth, weekends-only business days), and how AI tools were used; demo script walks: reset → tour 3 tenants → preview → demo page → diff → edit+history+rollback → create tenant #4 → process claim → persistence note.
 
 - [ ] **README sections:** what this is (challenge link) · live URL · screenshots · quickstart (env, migrate, seed, dev) · architecture summary (one engine, versioned JSONB, validation) · testing (`npm run test` — expected count) · project docs map (specs/plans/PROGRESS).
-- [ ] **WRITEUP sections:** problem framing · architecture decisions with reasoning · the traps and how they're handled (threshold 0, tier boundaries, business days, preview=runtime, persistence) · AI-assisted workflow description (spec → plan → task-by-task with verification) · time spent breakdown · what I'd do with more time.
+- [ ] **WRITEUP sections:** problem framing · architecture decisions with reasoning · the tricky edge cases and how they're handled (threshold 0, tier boundaries, business days, preview=runtime, persistence) · AI-assisted workflow description (spec → plan → task-by-task with verification) · time spent breakdown · what I'd do with more time.
 - [ ] Final `docs/PROGRESS.md` update: phase → submitted; Session Log entry.
 - [ ] Commit — `docs: README, writeup, and demo script for submission` → push.
 
@@ -751,4 +751,4 @@ Each `...` is a full Playwright spec using `page.getByRole`/`getByLabel` selecto
 | 7 | processClaim 5 outputs correct | process-claim.test.ts + worked example |
 | 8 | Modularity | one schema/one engine/tab-per-section; writeup section |
 
-Plus: `npm run test` all green · `npx playwright test` 8/8 green · `npx tsc --noEmit` clean · live URL in README · timeline already communicated to recruiter.
+Plus: `npm run test` all green · `npx playwright test` 8/8 green · `npx tsc --noEmit` clean · live URL in README.

@@ -245,7 +245,8 @@ so runs are deterministic.
 ## 13. Deployment
 
 Vercel (app) + Neon (PostgreSQL, persists across deploys/cold starts — required so a
-tenant created through the UI survives until graded). Prisma for schema/migrations.
+tenant created through the UI is never lost to a restart or redeploy). Prisma for
+schema/migrations.
 Env: `DATABASE_URL`. Seed via script locally and `reset-demo` endpoint in production.
 
 ## 14. Acceptance Criteria Mapping
