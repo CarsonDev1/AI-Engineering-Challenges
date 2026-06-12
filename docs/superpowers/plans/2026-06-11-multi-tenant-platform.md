@@ -421,7 +421,7 @@ function isTypeValid(type: string, v: unknown, options?: string[]): boolean {
 **Files:** Create: `src/lib/config/seed-tenants.ts`, `src/lib/config/seed-tenants.test.ts`
 **Verify:** all 3 seed configs pass `tenantConfigSchema`; the spec §5 worked example asserts exactly (SafeGuard AUTO/2026-06-19 · HealthFirst assessor/2026-06-23 · GovHealth committee/2026-07-03).
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -455,10 +455,10 @@ describe('seed tenants', () => {
 });
 ```
 
-- [ ] **Step 2: Run — FAIL**
-- [ ] **Step 3: Implement `SEED_TENANTS`** — `Array<{ slug, name, config: TenantConfig }>` with the exact spec §11 data: safeguard (threshold 20000; tiers assessor<100000, team_lead<500000, director∞; email all 4 events; SLA OP5/IP10/DENTAL5; employeeId required), healthfirst (all 5 types; threshold 5000; assessor<50000, manager∞; email+sms; SLA 7 all; no custom fields), govhealth (OP+IP; threshold 0; committee∞; email+webhook; SLA 15; department + budgetCode required). Document lists per spec §11 verbatim.
+- [x] **Step 2: Run — FAIL** _(failed correctly: `Cannot find module './seed-tenants'`)_
+- [x] **Step 3: Implement `SEED_TENANTS`** — `readonly SeedTenant[]` (`{ slug, name, config: TenantConfig }`) with the exact spec §11 data: safeguard (threshold 20000; tiers assessor<100000, team_lead<500000, director∞; email all 4 events; SLA OP5/IP10/DENTAL5; employeeId required), healthfirst (all 5 types; threshold 5000; assessor<50000, manager∞; email+sms; SLA 7 all; no custom fields), govhealth (OP+IP; threshold 0; committee∞; email+webhook; SLA 15; department + budgetCode required). Document lists per spec §11 verbatim. _(Decision: all four lifecycle notification events enabled for every tenant — tenants differ only by channel; matches the brief's per-tenant channel descriptions and makes the demo's "same events, different channels" contrast explicit.)_
 
-- [ ] **Step 4: Run — PASS** · **Step 5: Commit** — `feat: seed tenant configs matching the challenge brief`
+- [x] **Step 4: Run — PASS** _(suite 41/41; the §5 worked example asserts exactly — SafeGuard AUTO/2026-06-19 · HealthFirst assessor/2026-06-23 · GovHealth committee/2026-07-03 · GovHealth missing both custom fields)_ · **Step 5: Commit** _(pending user approval)_ — `feat: seed tenant configs matching the challenge brief`
 
 ---
 

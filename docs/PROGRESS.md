@@ -5,11 +5,11 @@
 
 ## Snapshot
 
-- **Phase:** Executing M1 (domain core, TDD) — Task 2 of 6 done
+- **Phase:** M1 (domain core, TDD) **complete — 6 of 6 tasks done**; next milestone M2 (persistence + API)
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 5 — `processClaim` engine (strict-< threshold, half-open tiers, error accumulation, full notification plan), 12 tests; suite 38/38
-- **Next up:** Task 6 — seed tenants + worked-example integration test (closes M1); Task 5 commit pending user approval
-- **Blockers / open questions:** none — Neon project created, `DATABASE_URL` in local `.env` (gitignored)
+- **Last completed:** Task 6 — `SEED_TENANTS` (3 sample tenants per spec §11) + worked-example integration test; suite **41/41**, `tsc --noEmit` clean. Tasks 1–5 already committed (HEAD `af7f415`); Task 6 commit pending user approval.
+- **Next up:** Task 7 — Prisma schema + Neon connection (starts M2). Needs `DATABASE_URL` in local `.env`.
+- **Blockers / open questions:** none. (Neon: verify the project exists and `.env` holds `DATABASE_URL` at the start of Task 7 — earlier note claimed it was created.)
 
 ## Decision Log
 
@@ -35,6 +35,8 @@
 - 2026-06-12: Diff treats arrays as atomic leaves (JSON.stringify equality) — element-wise array diffing is out of scope; safe because both diff inputs are always Postgres JSONB reads (consistent key serialization), a precondition documented in the module comment and pinned by tests.
 - 2026-06-12: Custom-field types are a named exported enum (`CUSTOM_FIELD_TYPES`/`CustomFieldType`) and the engine's type-validation switch is exhaustive with a `never` default — adding a new field type to the schema fails compilation until its validation is written (silent accept-as-text is impossible).
 - 2026-06-12: Shared test fixture `validConfig` lives in `src/lib/config/fixtures.ts` (not in a test file) — importing from test files makes vitest re-execute the imported suite (observed: 48 reported tests instead of 35) and the pattern compounds; test files are not importable modules in this repo.
+- 2026-06-12: All four lifecycle notification events (`claim_submitted`/`approved`/`rejected`/`payment_sent`) are enabled for every seed tenant; tenants differ only by channel (SafeGuard email · HealthFirst email+sms · GovHealth email+webhook). The brief states "all four events" only for SafeGuard and leaves event-enablement unstated for the other two — applying it uniformly keeps the demo's contrast purely about channels and avoids inventing per-event on/off rules the brief never specifies.
+- 2026-06-12: Seed configs include only the claim types a tenant offers (each `enabled: true`); types a tenant does not offer are absent rather than present-but-disabled. The engine treats absent and disabled identically (`!typeCfg?.enabled`), so e.g. MATERNITY→SafeGuard still yields `CLAIM_TYPE_NOT_ENABLED`; `claimTypes` is a `partialRecord` precisely to allow this minimal representation.
 
 ## Session Log
 
