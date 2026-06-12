@@ -489,10 +489,12 @@ describe('seed tenants', () => {
 
 ### Task 8: Tenant repository (versioning semantics live here)
 
-**Files:** Create: `src/lib/db/tenant-repo.ts`
-**Verify:** exercised through API tests in Task 9 + version-numbering rules visible in code review; rollback NEVER mutates old rows.
+**Files:** Create: `src/lib/db/tenant-repo.ts`, `src/lib/db/tenant-repo.integration.test.ts`, `vitest.integration.config.ts`; Modify: `vitest.config.ts` (exclude `*.integration.test.ts`), `package.json` (`test:integration` script)
+**Verify:** `npm run test:integration` passes against Neon — versions increment, rollback creates a NEW version (note `rollback to vN`) and NEVER mutates old rows; `npm run test` still 41 (pure, offline); `tsc --noEmit` clean.
 
-- [ ] **Step 1: Implement** — all config writes go through `createVersion`:
+> **Test-strategy decision (2026-06-12):** the plan originally deferred repo coverage to the Task 9 API tests, but the forward-only versioning/rollback semantics are the most bug-prone part of the system (spec §10), so they get a dedicated **integration test** that exercises the real Neon database. It is isolated in `*.integration.test.ts`, excluded from `npm run test` (which stays a pure, offline, deterministic unit suite), and run on demand via `npm run test:integration` (its own config loads `dotenv`, runs serially, 30s timeout for the cross-region round-trips). The test creates a scratch `__itest_tenant` and deletes it in `afterAll`.
+
+- [x] **Step 1: Implement** — all config writes go through `createVersion`:
 
 ```ts
 import { prisma } from './prisma';
@@ -537,7 +539,7 @@ export async function listVersions(tenantId: string) {
 }
 ```
 
-- [ ] **Step 2: Typecheck + Commit** — `feat: tenant repository with forward-only versioning`
+- [x] **Step 2: Integration test (RED→GREEN) + typecheck** — wrote the failing test first (`Cannot find module './tenant-repo'`), then implemented. JSON writes use `config as unknown as Prisma.InputJsonValue` (`Prisma` namespace from `@/generated/prisma/client`; `TenantConfig`'s optional fields make it not directly assignable). Verified: integration 1/1 on Neon (~10s), unit suite 41/41, `tsc --noEmit` clean. **Step 3: Commit** _(pending user approval)_ — `feat: tenant repository with forward-only versioning`
 
 ### Task 9: API route handlers (server-side validation chokepoint)
 

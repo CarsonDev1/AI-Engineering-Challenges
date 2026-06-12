@@ -5,10 +5,10 @@
 
 ## Snapshot
 
-- **Phase:** Executing M2 (persistence + API) — Task 7 of 3 done (Tasks 7, 8, 9)
+- **Phase:** Executing M2 (persistence + API) — Tasks 7 & 8 of 3 done; Task 9 next
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 7 — Prisma 7 schema (`Tenant` + `TenantConfigVersion`) + `prisma.config.ts` + Neon driver-adapter client; migration `20260612085136_init` applied to Neon; `prisma generate` → `src/generated/prisma`; verified `tsc --noEmit` clean, suite 41/41, `migrate status` up to date, runtime adapter smoke test `{tenants:0, versions:0}`. Tasks 1–6 committed (HEAD `c585388`); Task 7 commit pending user approval.
-- **Next up:** Task 8 — tenant repository (`src/lib/db/tenant-repo.ts`): forward-only versioning semantics (`createVersion`, `getActiveConfig`, `rollbackToVersion`, `listVersions`).
+- **Last completed:** Task 8 — `src/lib/db/tenant-repo.ts` (forward-only versioning: `createVersion`/`getActiveConfig`/`rollbackToVersion`/`listVersions`/`createTenant`/`listTenants`) + a dedicated **integration test** on Neon (RED→GREEN). Verified: `npm run test:integration` 1/1 (~10s), unit suite 41/41 (integration excluded — stays pure/offline), `tsc --noEmit` clean. Task 7 committed & pushed (HEAD `07e1cf2`, incl. README rewrite); Task 8 commit pending user approval.
+- **Next up:** Task 9 — API route handlers: the server-side Zod-validation chokepoint (config save → 400 with issues even bypassing UI), the single `process-claim` endpoint (runtime + preview + demo), CRUD/versions/rollback wrappers, and `reset-demo` (seeds the 3 sample tenants).
 - **Blockers / open questions:** none. (`@prisma/streams-local` warns it wants Node ≥22; we're on Node 20.19 — only affects `prisma dev`'s local server, not migrate/generate/runtime. Revisit if Vercel build complains.)
 
 ## Decision Log
@@ -40,6 +40,7 @@
 - 2026-06-12: Installed Prisma is **7.8.0**, which is a material change from the plan's v5/v6 assumptions. Verified the v7 setup against official docs before coding: generator `prisma-client` (not `prisma-client-js`) with a **required `output`** (`src/generated/prisma`); the Rust query engine is removed so a **driver adapter is mandatory**; `url` is banned from the schema `datasource` (moves to `prisma.config.ts`); `migrate`/`db push` no longer auto-run `generate`.
 - 2026-06-12: Chose **`@prisma/adapter-neon`** (Neon serverless driver over WS/HTTP) over `@prisma/adapter-pg` — it is the idiomatic Vercel+Neon serverless path, sidesteps PgBouncer transaction-mode pitfalls on the pooled connection, and matches why Neon was chosen. Cost: extra deps `@neondatabase/serverless` + `ws` (Node < 22 has no global `WebSocket`, so `neonConfig.webSocketConstructor = ws`) + `dotenv` (for `prisma.config.ts`).
 - 2026-06-12: Generated Prisma client is **gitignored** (`/src/generated/`) and rebuilt by a `postinstall: prisma generate` script — keeps the repo free of generated code, prevents drift, and guarantees Vercel builds against a fresh client. `DATABASE_URL` is the Neon **pooled** connection (`-pooler` host); the initial migration applied cleanly over it, so no separate `DIRECT_URL` is needed at this size.
+- 2026-06-12: The bug-prone versioning/rollback semantics (spec §10) get a **dedicated integration test** against real Neon, rather than only the plan's indirect Task-9 API coverage. It lives in `*.integration.test.ts`, is **excluded from `npm run test`** (which stays pure/offline/deterministic — 41 unit tests), and runs via `npm run test:integration` (own config: `dotenv` setup, serial, 30s timeout for cross-region WS round-trips; scratch `__itest_tenant` cleaned up in `afterAll`). This keeps TDD discipline on the riskiest logic without coupling the unit suite to the network.
 
 ## Session Log
 
