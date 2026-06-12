@@ -29,6 +29,9 @@ pnpm-debug.log*
 # vercel
 .vercel
 
+# prisma (generated client — regenerated on install via the postinstall script)
+/src/generated/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

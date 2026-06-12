@@ -466,49 +466,26 @@ describe('seed tenants', () => {
 
 ### Task 7: Prisma schema + Neon connection
 
-**Files:** Create: `prisma/schema.prisma`, `src/lib/db/prisma.ts`, `.env.example`; Modify: `.gitignore` (ensure `.env` ignored — already present)
-**Verify:** `npx prisma migrate dev --name init` succeeds against the Neon DB; `npx prisma studio` shows both tables.
+**Files:** Create: `prisma/schema.prisma`, `prisma.config.ts`, `src/lib/db/prisma.ts`; Modify: `.gitignore` (ignore `/src/generated/`), `package.json` (`postinstall: prisma generate`), `.env.example`
+**Verify:** `npx prisma migrate dev --name init` then `npx prisma generate` succeed against Neon; `npx prisma migrate status` = up to date; a runtime smoke test through `src/lib/db/prisma.ts` (the Neon adapter) queries both tables.
 
-- [ ] **Step 1: Create Neon project** (manual): neon.tech → new project `multi-tenant-config-platform` → copy connection string into `.env` as `DATABASE_URL`. Create `.env.example` with `DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"`.
+> **Prisma 7 deviation (2026-06-12):** the installed Prisma is **7.8.0**, which changes this task materially from the originally-planned v5/v6 shape. Verified against the official v7 docs before implementing:
+> - Generator is **`prisma-client`** (not `prisma-client-js`) and **requires `output`** — the client is generated into `src/generated/prisma` (gitignored; rebuilt by `postinstall`), not `node_modules`. Import from `@/generated/prisma/client`.
+> - The Rust query engine is gone → a **driver adapter is mandatory**. Chosen: **`@prisma/adapter-neon`** (Neon serverless driver) — needs `@neondatabase/serverless` + `ws` (Node < 22 has no global `WebSocket`) + `dotenv`.
+> - `url` is **no longer allowed in the schema `datasource`** — connection lives in `prisma.config.ts` (migrations) and the adapter (runtime).
+> - `migrate dev` / `db push` **no longer auto-run `generate`** — must run `prisma generate` explicitly (and on deploy via `postinstall`).
 
-- [ ] **Step 2: `prisma/schema.prisma`**
+- [x] **Step 1: Neon project** — already provisioned (prior session); `DATABASE_URL` (pooled, `-pooler` host) present in gitignored `.env`. `.env.example` updated with a Neon pooled-connection template.
 
-```prisma
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql", url = env("DATABASE_URL") }
+- [x] **Step 2: Install Prisma 7 Neon-adapter deps** — `npm install @prisma/adapter-neon @neondatabase/serverless ws dotenv` + `npm install -D @types/ws`.
 
-model Tenant {
-  id              String                @id @default(uuid())
-  slug            String                @unique
-  name            String
-  activeVersionId String?
-  versions        TenantConfigVersion[]
-  createdAt       DateTime              @default(now())
-}
+- [x] **Step 3: `prisma/schema.prisma`** — `generator client { provider = "prisma-client"; output = "../src/generated/prisma" }`, `datasource db { provider = "postgresql" }` (no `url`), plus the `Tenant` + `TenantConfigVersion` models (unchanged shape: forward-only versioning, `@@unique([tenantId, versionNo])`, cascade delete).
 
-model TenantConfigVersion {
-  id        String   @id @default(uuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  versionNo Int
-  config    Json
-  note      String?
-  createdAt DateTime @default(now())
+- [x] **Step 4: `prisma.config.ts`** (repo root) — `import 'dotenv/config'` + `defineConfig({ schema, migrations.path, datasource: { url: env('DATABASE_URL') } })`. This is where the CLI/migration connection now lives.
 
-  @@unique([tenantId, versionNo])
-}
-```
+- [x] **Step 5: `src/lib/db/prisma.ts`** — singleton `PrismaClient({ adapter: new PrismaNeon({ connectionString }) })`, with `neonConfig.webSocketConstructor = ws` and a `DATABASE_URL` presence guard. Import `PrismaClient` from `@/generated/prisma/client`.
 
-- [ ] **Step 3: `src/lib/db/prisma.ts`** — standard singleton
-
-```ts
-import { PrismaClient } from '@prisma/client';
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-```
-
-- [ ] **Step 4: Migrate + verify** — `npx prisma migrate dev --name init` → success. Commit: `feat: prisma schema for tenants and config versions`
+- [x] **Step 6: Migrate + generate + verify** — `npx prisma migrate dev --name init` (created `prisma/migrations/20260612085136_init`, applied to Neon over the pooler) → `npx prisma generate` → `tsc --noEmit` clean, suite 41/41, `migrate status` up to date, runtime adapter smoke test returned `{tenants:0, versions:0}`. **Step 7: Commit** _(pending user approval)_ — `feat: prisma 7 schema + neon adapter for tenants and config versions`
 
 ### Task 8: Tenant repository (versioning semantics live here)
 

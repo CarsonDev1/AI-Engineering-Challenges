@@ -1,0 +1,40 @@
+// Prisma 7: ESM-first `prisma-client` generator emits the client into a project
+// directory (not node_modules), so an explicit `output` is required. Connection
+// URLs are no longer allowed here — migrations read the url from prisma.config.ts,
+// and the runtime connects through the Neon driver adapter (see src/lib/db/prisma.ts).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// A tenant (insurer) on the platform. `activeVersionId` points at the config
+// version the runtime/preview read; every save creates a new version and repoints
+// it. Forward-only — no version row is ever updated or deleted.
+model Tenant {
+  id              String                @id @default(uuid())
+  slug            String                @unique
+  name            String
+  activeVersionId String?
+  versions        TenantConfigVersion[]
+  createdAt       DateTime              @default(now())
+}
+
+// One immutable snapshot of a tenant's whole TenantConfig (validated by the shared
+// Zod schema before insert). The version table is the audit trail; history, diff,
+// and rollback are cheap reads over these rows.
+model TenantConfigVersion {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  versionNo Int
+  config    Json
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, versionNo])
+}

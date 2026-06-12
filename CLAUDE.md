@@ -25,7 +25,16 @@ At the start of every session, before doing anything else:
 - Zod schemas as the single source of truth for validation (shared client/server)
 - Deployment: Vercel (live admin UI URL)
 
-Commands: _to be filled in once the app is scaffolded._
+Commands:
+
+- `npm run dev` — Next.js dev server (http://localhost:3000)
+- `npm run test` — Vitest unit suite · `npm run test:watch` — watch mode
+- `npx tsc --noEmit` — typecheck (strict)
+- `npx prisma migrate dev --name <name>` — create + apply a migration to Neon
+- `npx prisma generate` — regenerate the client into `src/generated/prisma` (Prisma 7 does **not** auto-run this after migrate; also wired as `postinstall`)
+- `npx prisma migrate status` / `npx prisma studio` — inspect migrations / data
+
+Prisma 7 notes: client is generated (gitignored) into `src/generated/prisma` — import from `@/generated/prisma/client`; runtime connects via the `@prisma/adapter-neon` driver adapter (`src/lib/db/prisma.ts`); the CLI/migration connection lives in `prisma.config.ts` (not the schema `datasource`).
 
 ## Working Agreements
 

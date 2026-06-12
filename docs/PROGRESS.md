@@ -5,11 +5,11 @@
 
 ## Snapshot
 
-- **Phase:** M1 (domain core, TDD) **complete — 6 of 6 tasks done**; next milestone M2 (persistence + API)
+- **Phase:** Executing M2 (persistence + API) — Task 7 of 3 done (Tasks 7, 8, 9)
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 6 — `SEED_TENANTS` (3 sample tenants per spec §11) + worked-example integration test; suite **41/41**, `tsc --noEmit` clean. Tasks 1–5 already committed (HEAD `af7f415`); Task 6 commit pending user approval.
-- **Next up:** Task 7 — Prisma schema + Neon connection (starts M2). Needs `DATABASE_URL` in local `.env`.
-- **Blockers / open questions:** none. (Neon: verify the project exists and `.env` holds `DATABASE_URL` at the start of Task 7 — earlier note claimed it was created.)
+- **Last completed:** Task 7 — Prisma 7 schema (`Tenant` + `TenantConfigVersion`) + `prisma.config.ts` + Neon driver-adapter client; migration `20260612085136_init` applied to Neon; `prisma generate` → `src/generated/prisma`; verified `tsc --noEmit` clean, suite 41/41, `migrate status` up to date, runtime adapter smoke test `{tenants:0, versions:0}`. Tasks 1–6 committed (HEAD `c585388`); Task 7 commit pending user approval.
+- **Next up:** Task 8 — tenant repository (`src/lib/db/tenant-repo.ts`): forward-only versioning semantics (`createVersion`, `getActiveConfig`, `rollbackToVersion`, `listVersions`).
+- **Blockers / open questions:** none. (`@prisma/streams-local` warns it wants Node ≥22; we're on Node 20.19 — only affects `prisma dev`'s local server, not migrate/generate/runtime. Revisit if Vercel build complains.)
 
 ## Decision Log
 
@@ -37,6 +37,9 @@
 - 2026-06-12: Shared test fixture `validConfig` lives in `src/lib/config/fixtures.ts` (not in a test file) — importing from test files makes vitest re-execute the imported suite (observed: 48 reported tests instead of 35) and the pattern compounds; test files are not importable modules in this repo.
 - 2026-06-12: All four lifecycle notification events (`claim_submitted`/`approved`/`rejected`/`payment_sent`) are enabled for every seed tenant; tenants differ only by channel (SafeGuard email · HealthFirst email+sms · GovHealth email+webhook). The brief states "all four events" only for SafeGuard and leaves event-enablement unstated for the other two — applying it uniformly keeps the demo's contrast purely about channels and avoids inventing per-event on/off rules the brief never specifies.
 - 2026-06-12: Seed configs include only the claim types a tenant offers (each `enabled: true`); types a tenant does not offer are absent rather than present-but-disabled. The engine treats absent and disabled identically (`!typeCfg?.enabled`), so e.g. MATERNITY→SafeGuard still yields `CLAIM_TYPE_NOT_ENABLED`; `claimTypes` is a `partialRecord` precisely to allow this minimal representation.
+- 2026-06-12: Installed Prisma is **7.8.0**, which is a material change from the plan's v5/v6 assumptions. Verified the v7 setup against official docs before coding: generator `prisma-client` (not `prisma-client-js`) with a **required `output`** (`src/generated/prisma`); the Rust query engine is removed so a **driver adapter is mandatory**; `url` is banned from the schema `datasource` (moves to `prisma.config.ts`); `migrate`/`db push` no longer auto-run `generate`.
+- 2026-06-12: Chose **`@prisma/adapter-neon`** (Neon serverless driver over WS/HTTP) over `@prisma/adapter-pg` — it is the idiomatic Vercel+Neon serverless path, sidesteps PgBouncer transaction-mode pitfalls on the pooled connection, and matches why Neon was chosen. Cost: extra deps `@neondatabase/serverless` + `ws` (Node < 22 has no global `WebSocket`, so `neonConfig.webSocketConstructor = ws`) + `dotenv` (for `prisma.config.ts`).
+- 2026-06-12: Generated Prisma client is **gitignored** (`/src/generated/`) and rebuilt by a `postinstall: prisma generate` script — keeps the repo free of generated code, prevents drift, and guarantees Vercel builds against a fresh client. `DATABASE_URL` is the Neon **pooled** connection (`-pooler` host); the initial migration applied cleanly over it, so no separate `DIRECT_URL` is needed at this size.
 
 ## Session Log
 

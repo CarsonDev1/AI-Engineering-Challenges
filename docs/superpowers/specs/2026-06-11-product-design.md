@@ -245,9 +245,15 @@ so runs are deterministic.
 ## 13. Deployment
 
 Vercel (app) + Neon (PostgreSQL, persists across deploys/cold starts — required so a
-tenant created through the UI is never lost to a restart or redeploy). Prisma for
-schema/migrations.
-Env: `DATABASE_URL`. Seed via script locally and `reset-demo` endpoint in production.
+tenant created through the UI is never lost to a restart or redeploy). Prisma 7 for
+schema/migrations: the `prisma-client` generator emits the client into
+`src/generated/prisma` (gitignored, rebuilt by a `postinstall: prisma generate` script
+so Vercel always has a fresh client), and the runtime connects through the
+**`@prisma/adapter-neon`** driver adapter (Prisma 7 has no bundled query engine). The
+CLI/migration connection lives in `prisma.config.ts`; `url` is no longer permitted in
+the schema `datasource`.
+Env: `DATABASE_URL` (Neon pooled connection). Seed via the `reset-demo` endpoint in
+production.
 
 ## 14. Acceptance Criteria Mapping
 
