@@ -5,10 +5,10 @@
 
 ## Snapshot
 
-- **Phase:** M0 done → executing M1 (domain core, TDD)
+- **Phase:** Executing M1 (domain core, TDD) — Task 2 of 6 done
 - **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
-- **Last completed:** Task 1 — scaffold (Next 16.2.9 / React 19 / antd 6.4.3 / zod 4.4.3 / prisma 7.8.0 / vitest 4.1.8); toolchain verified (dev 200, test exit 0, tsc clean)
-- **Next up:** Task 2 — config Zod schema (TDD); commits for completed tasks pending user approval
+- **Last completed:** Task 2 — tenant config Zod schema, 9 rules / 13 tests green, tsc clean; issue paths locked as the UI/API error-mapping contract
+- **Next up:** Task 3 — business-day calculator (TDD); Task 2 commit pending user approval
 - **Blockers / open questions:** none — Neon project created, `DATABASE_URL` in local `.env` (gitignored)
 
 ## Decision Log
@@ -29,6 +29,8 @@
 - 2026-06-12: antd v6 instead of the planned v5 — Next 16 ships React 19, which antd v5 only supports via a compat patch; v6 supports React 19 natively. Plan's AntD component mapping (ColorPicker, Select tags, Collapse, etc.) is unchanged in v6.
 - 2026-06-12: `--passWithNoTests` added to the test script so the Task 1 verify criterion (exit 0 with zero tests) holds; remove it in Task 2 the moment the first real test file exists, so an empty test run can never silently pass again.
 - 2026-06-12: Next 16 scaffold's `AGENTS.md` kept — it points agents at `node_modules/next/dist/docs/` for post-training-cutoff API changes; UI/API tasks must consult those docs.
+- 2026-06-12: Validation rule 9 added to spec §8 and plan Task 2 — `autoApprovalThreshold` must be strictly below the first tier's upper bound (when bounded); at/above it the first tier is unreachable (dead config the admin almost certainly didn't intend).
+- 2026-06-12: Every schema refinement carries an explicit issue `path` (section/field level), and rejection tests assert `issues[0].path` — this is the error-mapping contract: editor tabs (Task 11) and API 400 bodies (Task 9) locate errors by path, so `path: []` issues are banned.
 
 ## Session Log
 

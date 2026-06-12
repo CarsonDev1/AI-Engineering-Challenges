@@ -183,6 +183,9 @@ with field-level errors regardless of what the UI allowed.
 6. Enabled notification events have ≥ 1 channel.
 7. Branding colors are valid hex; logo URL is a valid URL.
 8. Custom field keys unique; `select` fields have ≥ 1 option.
+9. `autoApprovalThreshold` strictly below the first tier's upper bound (when bounded) —
+   a threshold at or above it would make the first tier unreachable (dead tier).
+   _(Added 2026-06-12 after cross-checking the brief's tier example.)_
 
 ## 9. Config Diff
 

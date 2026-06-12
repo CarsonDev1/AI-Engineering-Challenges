@@ -70,12 +70,12 @@ git add -A && git commit -m "chore: scaffold Next.js + AntD + Zod + Prisma + Vit
 
 ## Milestone 1 — Domain core (pure logic, TDD, no DB)
 
-### Task 2: Config types + Zod schema with all 8 refinements
+### Task 2: Config types + Zod schema with all 9 refinements
 
-**Files:** Create: `src/lib/config/schema.ts`, `src/lib/config/schema.test.ts`
-**Verify:** `npm run test -- schema` — valid fixture passes; 8 invalid fixtures each rejected with the expected error path.
+**Files:** Create: `src/lib/config/schema.ts`, `src/lib/config/schema.test.ts`; Modify: `package.json` (drop `--passWithNoTests` — real tests exist from this task on)
+**Verify:** `npm run test -- schema` — valid fixture passes; every invalid fixture (one per rule, 9 rules) rejected.
 
-- [ ] **Step 1: Write failing tests** — one accepting fixture + one rejecting fixture per rule
+- [x] **Step 1: Write failing tests** — one accepting fixture + one rejecting fixture per rule
 
 ```ts
 // src/lib/config/schema.test.ts
@@ -117,12 +117,14 @@ describe('tenantConfigSchema', () => {
     expect(invalid({ customFields: [{ key: 'a', label: 'A', type: 'text', required: true }, { key: 'a', label: 'B', type: 'text', required: false }] }).success).toBe(false));
   it('rejects select field without options', () =>
     expect(invalid({ customFields: [{ key: 'dept', label: 'Dept', type: 'select', required: true }] }).success).toBe(false));
+  it('rejects a threshold that makes the first tier unreachable (dead tier)', () =>
+    expect(invalid({ approval: { autoApprovalThreshold: 100000, tiers: [{ upTo: 100000, role: 'a' }, { upTo: null, role: 'b' }] } }).success).toBe(false));
 });
 ```
 
-- [ ] **Step 2: Run — expect FAIL** (`tenantConfigSchema` not defined)
+- [x] **Step 2: Run — expect FAIL** (`tenantConfigSchema` not defined)
 
-- [ ] **Step 3: Implement `src/lib/config/schema.ts`**
+- [x] **Step 3: Implement `src/lib/config/schema.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -158,7 +160,9 @@ export const tenantConfigSchema = z.object({
     .refine(a => a.tiers[a.tiers.length - 1].upTo === null, { message: 'last tier must be unbounded (upTo: null)' })
     .refine(a => a.tiers.slice(0, -1).every(t => t.upTo !== null), { message: 'only the last tier may be unbounded' })
     .refine(a => a.tiers.slice(0, -1).every((t, i, arr) => i === 0 || (arr[i - 1].upTo! < t.upTo!)),
-      { message: 'tier bounds must be strictly ascending' }),
+      { message: 'tier bounds must be strictly ascending' })
+    .refine(a => a.tiers[0].upTo === null || a.autoApprovalThreshold < a.tiers[0].upTo,
+      { message: 'threshold must be below the first tier bound, otherwise that tier is unreachable' }),
   notifications: z.partialRecord(z.enum(NOTIFICATION_EVENTS), z.object({
     enabled: z.boolean(), channels: z.array(z.enum(CHANNELS)), emailTemplate: z.string().optional(),
   }).refine(n => !n.enabled || n.channels.length > 0, { message: 'enabled events need at least one channel' })),
@@ -179,7 +183,7 @@ export type TenantConfig = z.infer<typeof tenantConfigSchema>;
 
 Note: if the installed Zod version lacks `z.partialRecord`, use `z.record(z.enum(...), x).optional()`-style or `z.object({}).catchall()` equivalent — keep the inferred type `Partial<Record<K, V>>`.
 
-- [ ] **Step 4: Run — expect all PASS**
+- [x] **Step 4: Run — expect all PASS** _(13/13; quality review 2026-06-12: refines carry explicit `path` options and every rejection test asserts `issues[0].path` — locks the error-mapping contract Tasks 9/11 rely on; zod 4: `z.url()` replaces deprecated `z.string().url()`)_
 - [ ] **Step 5: Commit** — `feat: tenant config schema with cross-field validation rules`
 
 ### Task 3: Business-day calculator
