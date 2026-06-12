@@ -5,11 +5,11 @@
 
 ## Snapshot
 
-- **Phase:** Implementation plan ready → next: execute Task 1 (scaffold)
-- **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (18 tasks, 4 milestones, ~12h)
-- **Last completed:** Implementation plan written and self-reviewed
-- **Next up:** Execute Task 1 — scaffold Next.js + toolchain (fresh session recommended for execution)
-- **Blockers / open questions:** Neon account needed at Task 7 (manual step)
+- **Phase:** M0 done → executing M1 (domain core, TDD)
+- **Active plan:** `docs/superpowers/plans/2026-06-11-multi-tenant-platform.md` (19 tasks, 4 milestones, ~13h)
+- **Last completed:** Task 1 — scaffold (Next 16.2.9 / React 19 / antd 6.4.3 / zod 4.4.3 / prisma 7.8.0 / vitest 4.1.8); toolchain verified (dev 200, test exit 0, tsc clean)
+- **Next up:** Task 2 — config Zod schema (TDD); commits for completed tasks pending user approval
+- **Blockers / open questions:** none — Neon project created, `DATABASE_URL` in local `.env` (gitignored)
 
 ## Decision Log
 
@@ -26,6 +26,9 @@
 - 2026-06-11: `processClaim` returns the full lifecycle notification plan (all enabled events), not just `claim_submitted`.
 - 2026-06-11: Scope = all 8 acceptance criteria + selected differentiators (demo page "one claim three fates", business-day unit tests, branding-aware preview, reset/seed) — matches the 10–12h estimate communicated to the recruiter.
 - 2026-06-11: Playwright E2E suite added (8 chromium specs, `workers: 1`, reset-demo in beforeAll) as plan Task 17 — covers admin flows unit tests cannot reach; accessible-name selectors only (AntD class names are unstable).
+- 2026-06-12: antd v6 instead of the planned v5 — Next 16 ships React 19, which antd v5 only supports via a compat patch; v6 supports React 19 natively. Plan's AntD component mapping (ColorPicker, Select tags, Collapse, etc.) is unchanged in v6.
+- 2026-06-12: `--passWithNoTests` added to the test script so the Task 1 verify criterion (exit 0 with zero tests) holds; remove it in Task 2 the moment the first real test file exists, so an empty test run can never silently pass again.
+- 2026-06-12: Next 16 scaffold's `AGENTS.md` kept — it points agents at `node_modules/next/dist/docs/` for post-training-cutoff API changes; UI/API tasks must consult those docs.
 
 ## Session Log
 

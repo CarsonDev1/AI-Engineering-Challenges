@@ -21,7 +21,7 @@
 **Files:** Create: Next.js app at repo root (in-place), `vitest.config.ts`, `.env.example`
 **Verify:** `npm run dev` serves a page; `npm run test` runs Vitest (0 tests, exit 0); `npx tsc --noEmit` passes.
 
-- [ ] **Step 1: Scaffold in place** (repo root already has README/CLAUDE/docs — scaffold into a temp dir and merge)
+- [x] **Step 1: Scaffold in place** (repo root already has README/CLAUDE/docs — scaffold into a temp dir and merge)
 
 ```powershell
 cd "d:\AI Engineering Challenges\multi-tenant-config-platform"
@@ -30,14 +30,14 @@ robocopy tmp-scaffold . /E /XF README.md /XD .git node_modules; Remove-Item -Rec
 npm install
 ```
 
-- [ ] **Step 2: Install dependencies**
+- [x] **Step 2: Install dependencies**
 
 ```powershell
 npm install antd zod @prisma/client
 npm install -D vitest prisma @types/node
 ```
 
-- [ ] **Step 3: Create `vitest.config.ts`**
+- [x] **Step 3: Create `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -49,14 +49,14 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Add scripts to `package.json`**
+- [x] **Step 4: Add scripts to `package.json`** _(added `--passWithNoTests`, to be removed in Task 2 once real tests exist)_
 
 ```json
 "test": "vitest run",
 "test:watch": "vitest"
 ```
 
-- [ ] **Step 5: Verify toolchain**
+- [x] **Step 5: Verify toolchain**
 
 Run: `npm run dev` → page on http://localhost:3000. `npm run test` → "no test files found" exit 0. `npx tsc --noEmit` → clean.
 
