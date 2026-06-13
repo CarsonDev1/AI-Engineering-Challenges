@@ -12,7 +12,7 @@ const sans = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' });
 const mono = IBM_Plex_Mono({ subsets: ['latin'], variable: '--font-mono', weight: ['400', '500', '600'] });
 
 export const metadata: Metadata = {
-  title: 'Keystone — Tenant Configuration',
+  title: 'Papaya Keystone — Tenant Configuration',
   description: 'Admin-configurable multi-tenant claims processing — one engine, one schema, per-tenant policy.',
 };
 
