@@ -92,3 +92,55 @@ test('onboard a 4th tenant through the modal, zero code', async ({ page, request
   const created = list.find((t) => t.slug === slug);
   if (created) await request.delete(`/api/tenants/${created.id}`);
 });
+
+test('preview runs the worked example through the runtime endpoint, in tenant branding', async ({ page, request }) => {
+  await request.post('/api/reset-demo'); // fresh seeds → order-independent ids
+  await page.goto('/');
+  await page
+    .getByTestId('tenant-card')
+    .filter({ hasText: 'SafeGuard Insurance' })
+    .getByRole('link', { name: 'Preview' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'SafeGuard Insurance' })).toBeVisible();
+  await expect(page.getByTestId('brand-frame')).toBeVisible();
+
+  // The form offers only SafeGuard's enabled types (OUTPATIENT/INPATIENT/DENTAL) — not MATERNITY/OPTICAL.
+  // antd v6 dropdown items are not role="option"; target the visible item by its title.
+  await page.getByLabel('Claim type').click();
+  await expect(page.locator('.ant-select-item-option[title="OUTPATIENT"]')).toBeVisible();
+  await expect(page.locator('.ant-select-item-option[title="MATERNITY"]')).toHaveCount(0);
+  await page.locator('.ant-select-item-option[title="OUTPATIENT"]').click();
+
+  await page.getByLabel('Claim amount').fill('12000');
+  await page.getByLabel('Submission date').fill('2026-06-12');
+  await page.getByLabel('Employee ID').fill('E-1');
+
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/api/process-claim') && r.request().method() === 'POST'),
+    page.getByRole('button', { name: 'Process claim' }).click(),
+  ]);
+  expect(res.status()).toBe(200);
+
+  // 12000 < 20000 threshold → auto-approved; +5 business days from Fri 2026-06-12 → Fri 2026-06-19.
+  await expect(page.getByTestId('approval-route')).toHaveText(/Auto-approved/);
+  await expect(page.getByTestId('sla-deadline')).toHaveText('2026-06-19');
+  await expect(page.getByText('Medical receipt')).toBeVisible(); // a required document
+});
+
+test('preview shows a structured error for a missing required custom field (no crash)', async ({ page }) => {
+  await page.goto('/');
+  await page
+    .getByTestId('tenant-card')
+    .filter({ hasText: 'SafeGuard Insurance' })
+    .getByRole('link', { name: 'Preview' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'SafeGuard Insurance' })).toBeVisible();
+
+  // Leave Employee ID blank; type/amount/date default to a valid OUTPATIENT claim.
+  await page.getByLabel('Claim amount').fill('12000');
+  await page.getByLabel('Submission date').fill('2026-06-12');
+  await page.getByRole('button', { name: 'Process claim' }).click();
+
+  await expect(page.getByTestId('process-result')).toBeVisible();
+  await expect(page.getByText('Missing required field: Employee ID')).toBeVisible();
+});

@@ -649,7 +649,19 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 
 `ProcessResultPanel` sections: Documents (required/optional lists) · Approval (AUTO badge or role + tier) · Notifications (event → channel tags + template source) · SLA deadline (date + "N business days") · Escalation. `ClaimForm` and `ProcessResultPanel` are shared with the demo page (Task 15) — build them tenant-parameterized.
 
-- [ ] Commit — `feat: branding-aware preview mode calling the runtime endpoint`
+> **Implemented (2026-06-13).** `BrandingFrame` wraps content in the tenant's logo + name bar and recolours AntD controls to the tenant's `primaryColor` via a nested (inheriting) `ConfigProvider` — so the "Process claim" button and focus rings read in the insurer's own colour. `ClaimForm` is **controlled + config-parameterized** (offers only enabled claim types, renders custom fields by type with an exhaustive `never` switch mirroring the engine) and carries **no submit button / no API call** — the page owns those, so Task 15's demo can compose three of them around one shared claim. `ProcessResultPanel` is pure presentation of a `ProcessClaimResult` (the five outputs, or the structured errors as an alert — never a crash). The preview page POSTs `{ tenantId, claim }` to **`/api/process-claim`** (the same runtime endpoint, verified via `waitForResponse` in the e2e). Two bugs found and fixed during verification: (1) the mount effect runs twice under React Strict Mode, so the draft is now seeded **once** via a functional guard (`prev ?? …`) — a plain set let the second load wipe an in-progress claim mid-interaction; (2) the default/dropdown claim-type order came from `Object.keys(claimTypes)`, which is Postgres **jsonb's normalised key order** (by length → DENTAL first) after the round-trip, so order now derives from the canonical `CLAIM_TYPES` const. Date inputs are native `<input type="date">` (clean `YYYY-MM-DD`, reliable Playwright `fill`) rather than AntD's dayjs `DatePicker`. Verified: `tsc` + `lint` clean, unit **48**, **Playwright 20/20** (2 new preview specs: branded worked-example through the runtime endpoint + missing-required-field structured error), screenshot confirms the SafeGuard-branded render.
+
+- [x] Commit — `feat: branding-aware preview mode calling the runtime endpoint` _(pending user approval per repo rule)_
+
+### Task 12b: Branding — adopt Papaya identity (Papaya Keystone)
+
+> **Added 2026-06-13 (user request) — tracked as its own phase/task.** Brand the admin product as **Papaya Keystone** using Papaya's own logo lockup; this is Papaya's internal multi-tenant config tool, so adopting the employer's identity is a deliberate culture-fit/polish signal.
+
+**Files:** Modify: `src/components/AppHeader.tsx` (pink "P" mark + "Papaya Keystone" wordmark + aria-label), `src/app/layout.tsx` (metadata title), `src/app/globals.css` (badge → 32px/8px to match Papaya, `.wordmark__product`); Replace: `src/app/favicon.ico` (Papaya's `icon.ico`).
+**Verify:** header renders Papaya's pink "P" mark + "Papaya Keystone"; browser tab title + favicon are Papaya's; `tsc` + `lint` clean; e2e unaffected (no spec references "Keystone"); screenshot confirms.
+
+- [x] Reproduced Papaya's mark faithfully (extracted live from papaya.asia: `#ED1B55`, 32px square, 8px radius, white bold "P"; "Papaya" in Plus Jakarta Sans 600 — colour + typeface already matched our theme, so only the letter, wordmark, title, and favicon changed). "Papaya" bold + "Keystone" lighter reads as the product within the parent brand. Papaya's logo is pure CSS (no image asset), so it's reproduced in markup; the **favicon** is the one downloadable asset, pulled from `papaya.asia/icon.ico` (replaces the Next scaffold default). Verified: `tsc` + `lint` clean, header screenshot confirms, `grep` shows no e2e/runtime dependency on the old name.
+- [x] Commit — `feat: adopt Papaya brand identity — Papaya Keystone` _(pending user approval per repo rule)_
 
 ### Task 13: History page — versions, view, diff vs current, rollback
 

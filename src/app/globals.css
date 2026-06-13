@@ -81,20 +81,26 @@ body {
 .wordmark__badge {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  /* matches Papaya's own mark: 32px square, 8px radius, white bold "P" */
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   background: var(--papaya);
   color: #fff;
-  font-weight: 800;
-  font-size: 16px;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.02em;
   box-shadow: 0 2px 10px -2px rgba(237, 27, 85, 0.5);
 }
 .wordmark__name {
   font-weight: 700;
   font-size: 19px;
   letter-spacing: -0.03em;
+}
+/* "Keystone" — the product within Papaya — sits a touch lighter than the parent brand */
+.wordmark__product {
+  font-weight: 500;
+  color: var(--ink-soft);
 }
 .wordmark__tag {
   font-family: var(--font-mono), monospace;
@@ -422,8 +428,197 @@ body {
   white-space: nowrap;
 }
 
+/* — Branding frame (preview / demo) — */
+.brand-frame {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.brand-frame__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line);
+  /* a subtle wash of the tenant's own colour */
+  background: color-mix(in srgb, var(--brand, var(--papaya)) 8%, var(--bg));
+}
+.brand-frame__logo {
+  height: 30px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  object-position: left center;
+}
+.brand-frame__name {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--brand, var(--ink)) 55%, var(--ink));
+}
+.brand-frame__tag {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.brand-frame__body {
+  padding: 26px 22px;
+}
+
+/* — Preview layout — */
+.preview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 32px;
+}
+.preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.preview-col__title {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.field__req {
+  color: var(--papaya);
+  font-weight: 700;
+}
+
+/* native date input, styled to sit alongside AntD controls (brand-tinted focus ring) */
+.native-date {
+  width: 100%;
+  height: 38px;
+  padding: 4px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+}
+.native-date:focus {
+  outline: none;
+  border-color: var(--brand, var(--papaya));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, var(--papaya)) 14%, transparent);
+}
+
+/* — Process result panel — */
+.result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.result-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.result-block__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.result-block__subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+}
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.result-badge--auto {
+  color: #027a48;
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+}
+.result-badge--manual {
+  color: var(--ink);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-strong);
+}
+.result-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.result-list li {
+  font-size: 14px;
+}
+.result-list--muted li {
+  color: var(--ink-soft);
+}
+.result-errors {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.result-notifs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.result-notif {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.result-notif__event {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 130px;
+}
+.result-notif__tpl {
+  font-size: 12px;
+}
+.result-sla {
+  font-size: 16px;
+  font-weight: 600;
+}
+.result-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-soft);
+  padding: 28px 22px;
+}
+
 /* — Responsive — */
 @media (max-width: 860px) {
+  .preview-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
   .app-main {
     padding: 28px 16px 64px;
   }
