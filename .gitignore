@@ -36,6 +36,7 @@ pnpm-debug.log*
 /playwright-report/
 /test-results/
 /.playwright/
+/.playwright-mcp/
 
 # typescript
 *.tsbuildinfo

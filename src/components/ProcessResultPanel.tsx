@@ -27,7 +27,7 @@ export function ProcessResultPanel({
         <Alert
           type="error"
           showIcon
-          message="This claim cannot be processed"
+          title="This claim cannot be processed"
           description={
             <ul className="result-errors">
               {result.errors.map((e, i) => (

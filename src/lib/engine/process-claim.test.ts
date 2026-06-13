@@ -31,6 +31,23 @@ describe('processClaim', () => {
     const r = processClaim(validConfig, claim());
     expect(r.ok && r.notifications).toEqual([{ event: 'claim_submitted', channels: ['email'], template: 'default' }]);
   });
+  it('emits notifications in canonical lifecycle order regardless of config key order', () => {
+    const cfg = structuredClone(validConfig);
+    // Scrambled insertion order — mirrors how Postgres jsonb reorders keys on round-trip.
+    cfg.notifications = {
+      payment_sent: { enabled: true, channels: ['email'] },
+      claim_submitted: { enabled: true, channels: ['email'] },
+      rejected: { enabled: true, channels: ['sms'] },
+      approved: { enabled: true, channels: ['email'] },
+    };
+    const r = processClaim(cfg, claim());
+    expect(r.ok && r.notifications.map((n) => n.event)).toEqual([
+      'claim_submitted',
+      'approved',
+      'rejected',
+      'payment_sent',
+    ]);
+  });
   it('rejects disabled claim type with structured error', () => {
     const r = processClaim(validConfig, claim({ claimType: 'DENTAL' }));
     expect(!r.ok && r.errors[0].code).toBe('CLAIM_TYPE_NOT_ENABLED');

@@ -1,4 +1,4 @@
-import type { TenantConfig, ClaimType, CustomFieldType } from '../config/schema';
+import { NOTIFICATION_EVENTS, type TenantConfig, type ClaimType, type CustomFieldType } from '../config/schema';
 import { addBusinessDays } from './business-days';
 
 export type ClaimInput = { claimType: ClaimType; amount: number; submittedAt: string;
@@ -41,9 +41,13 @@ export function processClaim(config: TenantConfig, claim: ClaimInput): ProcessCl
     requiredDocuments: typeCfg!.requiredDocuments,
     optionalDocuments: typeCfg!.optionalDocuments,
     approval,
-    notifications: Object.entries(config.notifications)
-      .filter(([, n]) => n?.enabled)
-      .map(([event, n]) => ({ event, channels: n!.channels, template: n!.emailTemplate ? 'custom' as const : 'default' as const })),
+    // Canonical lifecycle order, not Object.entries() — jsonb round-trips reorder keys.
+    notifications: NOTIFICATION_EVENTS
+      .filter((event) => config.notifications[event]?.enabled)
+      .map((event) => {
+        const n = config.notifications[event]!;
+        return { event, channels: n.channels, template: n.emailTemplate ? 'custom' as const : 'default' as const };
+      }),
     // SLA presence for enabled types guaranteed by tenantConfigSchema refinement
     slaDeadline: addBusinessDays(claim.submittedAt, config.sla.businessDaysByClaimType[claim.claimType]!),
     escalation: { notifyRole: config.sla.escalation.notifyRole } };
