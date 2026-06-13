@@ -1,4 +1,4 @@
-import { NOTIFICATION_EVENTS, type TenantConfig, type ClaimType, type CustomFieldType } from '../config/schema';
+import { NOTIFICATION_EVENTS, type TenantConfig, type ClaimType, type CustomFieldType, type Currency } from '../config/schema';
 import { addBusinessDays } from './business-days';
 
 export type ClaimInput = { claimType: ClaimType; amount: number; submittedAt: string;
@@ -14,7 +14,8 @@ export type ProcessClaimResult =
       approval: { route: 'AUTO_APPROVED' } | { route: 'MANUAL'; role: string; tierIndex: number };
       notifications: { event: string; channels: string[]; template: 'custom' | 'default' }[];
       slaDeadline: string;
-      escalation: { notifyRole: string } };
+      escalation: { notifyRole: string };
+      currency: Currency };
 
 export function processClaim(config: TenantConfig, claim: ClaimInput): ProcessClaimResult {
   const errors: ClaimError[] = [];
@@ -50,7 +51,9 @@ export function processClaim(config: TenantConfig, claim: ClaimInput): ProcessCl
       }),
     // SLA presence for enabled types guaranteed by tenantConfigSchema refinement
     slaDeadline: addBusinessDays(claim.submittedAt, config.sla.businessDaysByClaimType[claim.claimType]!),
-    escalation: { notifyRole: config.sla.escalation.notifyRole } };
+    escalation: { notifyRole: config.sla.escalation.notifyRole },
+    // Configs stored before `currency` existed read back without it — fall back to USD.
+    currency: config.branding.currency ?? 'USD' };
 }
 
 // Half-open intervals: a boundary amount belongs to the higher tier.

@@ -356,6 +356,13 @@ body {
   color: var(--ink-soft);
 }
 
+.result-amount {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 /* — Config editor — */
 .editor-pane {
   display: flex;

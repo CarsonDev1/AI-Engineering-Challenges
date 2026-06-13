@@ -147,7 +147,7 @@ export default function TenantPreviewPage({ params }: { params: Promise<{ id: st
           <div className="preview-col">
             <h2 className="preview-col__title">How {tenant.name} processes it</h2>
             {result ? (
-              <ProcessResultPanel result={result} businessDays={businessDays} />
+              <ProcessResultPanel result={result} businessDays={businessDays} amount={draft.amount ?? undefined} />
             ) : (
               <div className="result-empty">
                 <p className="muted">

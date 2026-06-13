@@ -15,6 +15,7 @@ const safeguard: TenantConfig = {
     logoUrl: 'https://placehold.co/200x60/1d4ed8/ffffff?text=SafeGuard',
     primaryColor: '#1d4ed8',
     secondaryColor: '#dbeafe',
+    currency: 'USD',
   },
   claimTypes: {
     OUTPATIENT: { enabled: true, requiredDocuments: ['Medical receipt'], optionalDocuments: ['Prescription'] },
@@ -52,6 +53,7 @@ const healthfirst: TenantConfig = {
     logoUrl: 'https://placehold.co/200x60/059669/ffffff?text=HealthFirst',
     primaryColor: '#059669',
     secondaryColor: '#d1fae5',
+    currency: 'USD',
   },
   claimTypes: {
     OUTPATIENT: { enabled: true, requiredDocuments: ['Medical receipt'], optionalDocuments: ['Prescription'] },
@@ -86,6 +88,7 @@ const govhealth: TenantConfig = {
     logoUrl: 'https://placehold.co/200x60/7e22ce/ffffff?text=GovHealth',
     primaryColor: '#7e22ce',
     secondaryColor: '#f3e8ff',
+    currency: 'USD',
   },
   claimTypes: {
     OUTPATIENT: { enabled: true, requiredDocuments: ['Medical receipt', 'Referral letter'], optionalDocuments: [] },

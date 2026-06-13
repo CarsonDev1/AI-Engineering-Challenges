@@ -4,8 +4,10 @@ export const CLAIM_TYPES = ['OUTPATIENT', 'INPATIENT', 'DENTAL', 'MATERNITY', 'O
 export const NOTIFICATION_EVENTS = ['claim_submitted', 'approved', 'rejected', 'payment_sent'] as const;
 export const CHANNELS = ['email', 'sms', 'webhook'] as const;
 export const CUSTOM_FIELD_TYPES = ['text', 'number', 'date', 'select'] as const;
+export const CURRENCIES = ['USD', 'VND', 'EUR', 'GBP', 'SGD'] as const;
 export type ClaimType = (typeof CLAIM_TYPES)[number];
 export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
+export type Currency = (typeof CURRENCIES)[number];
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'must be a hex color like #1677ff');
 
@@ -41,6 +43,10 @@ export const tenantConfigSchema = z
       logoUrl: z.url(),
       primaryColor: hexColor,
       secondaryColor: hexColor,
+      // A config "dimension" added late to prove modularity: one schema field, echoed by
+      // the engine, formats money in preview/demo. Runtime tolerates older stored configs
+      // that predate it (falls back to USD) — see process-claim + format-money.
+      currency: z.enum(CURRENCIES),
     }),
     claimTypes: z.partialRecord(z.enum(CLAIM_TYPES), claimTypeConfig),
     approval: z

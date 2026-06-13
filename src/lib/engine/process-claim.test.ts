@@ -60,6 +60,16 @@ describe('processClaim', () => {
     const r = processClaim(validConfig, claim({ amount: 0 }));
     expect(!r.ok && r.errors[0].code).toBe('INVALID_AMOUNT');
   });
+  it('echoes the tenant currency in the result', () => {
+    const r = processClaim(validConfig, claim());
+    expect(r.ok && r.currency).toBe('USD');
+  });
+  it('falls back to USD when an older stored config predates the currency field', () => {
+    const cfg = structuredClone(validConfig);
+    delete (cfg.branding as { currency?: string }).currency;
+    const r = processClaim(cfg, claim());
+    expect(r.ok && r.currency).toBe('USD');
+  });
   it('rejects a custom field whose value violates its type', () => {
     const cfg = structuredClone(validConfig);
     cfg.customFields = [{ key: 'age', label: 'Age', type: 'number', required: true }];

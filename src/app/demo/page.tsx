@@ -211,7 +211,11 @@ export default function DemoPage() {
                     )}
 
                     {result ? (
-                      <ProcessResultPanel result={result} businessDays={cfg.sla.businessDaysByClaimType[claimType]} />
+                      <ProcessResultPanel
+                        result={result}
+                        businessDays={cfg.sla.businessDaysByClaimType[claimType]}
+                        amount={amount}
+                      />
                     ) : (
                       <p className="muted" style={{ fontSize: 13 }}>
                         Press <strong>Process for all three</strong> to see this tenant&rsquo;s outcome.

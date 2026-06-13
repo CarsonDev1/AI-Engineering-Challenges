@@ -2,6 +2,7 @@
 
 import { Alert, Tag } from 'antd';
 import type { ProcessClaimResult } from '@/lib/engine/process-claim';
+import { formatMoney } from '@/lib/ui/format-money';
 
 const EVENT_LABELS: Record<string, string> = {
   claim_submitted: 'Claim submitted',
@@ -17,9 +18,11 @@ const EVENT_LABELS: Record<string, string> = {
 export function ProcessResultPanel({
   result,
   businessDays,
+  amount,
 }: {
   result: ProcessClaimResult;
   businessDays?: number;
+  amount?: number;
 }) {
   if (!result.ok) {
     return (
@@ -42,6 +45,15 @@ export function ProcessResultPanel({
 
   return (
     <div className="result-panel" data-testid="process-result">
+      {amount != null && (
+        <section className="result-block">
+          <h3 className="result-block__title">Claim amount</h3>
+          <p className="font-mono result-amount" data-testid="claim-amount">
+            {formatMoney(amount, result.currency)}
+          </p>
+        </section>
+      )}
+
       <section className="result-block">
         <h3 className="result-block__title">Approval routing</h3>
         {result.approval.route === 'AUTO_APPROVED' ? (

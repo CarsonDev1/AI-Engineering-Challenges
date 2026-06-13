@@ -267,6 +267,11 @@ test('demo runs one claim through three tenants and shows three different fates'
   await expect(col('healthfirst').getByTestId('sla-deadline')).toHaveText('2026-06-23');
   await expect(col('govhealth').getByTestId('approval-route')).toContainText('committee');
   await expect(col('govhealth').getByTestId('sla-deadline')).toHaveText('2026-07-03');
+  // The claim amount renders in the tenant's currency (all seeds USD — the dimension
+  // still flows config → engine echo → UI; vary it per tenant in the editor to see it
+  // change). Symbol can vary by runner locale, so just assert the amount line is present.
+  await expect(col('safeguard').getByTestId('claim-amount')).toBeVisible();
+  await expect(col('govhealth').getByTestId('claim-amount')).toBeVisible();
 
   // Clearing custom fields surfaces each tenant's required-field errors; HealthFirst has
   // none, so it still processes.

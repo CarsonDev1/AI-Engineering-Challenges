@@ -10,6 +10,7 @@ export function defaultTenantConfig(companyName: string): TenantConfig {
       logoUrl: `https://placehold.co/200x60/475569/ffffff?text=${encodeURIComponent(label)}`,
       primaryColor: '#475569',
       secondaryColor: '#e2e8f0',
+      currency: 'USD',
     },
     claimTypes: {
       OUTPATIENT: { enabled: true, requiredDocuments: ['Medical receipt'], optionalDocuments: [] },

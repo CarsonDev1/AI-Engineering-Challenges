@@ -1,7 +1,7 @@
 'use client';
 
-import { ColorPicker, Input } from 'antd';
-import type { TenantConfig } from '@/lib/config/schema';
+import { ColorPicker, Input, Select } from 'antd';
+import { CURRENCIES, type TenantConfig } from '@/lib/config/schema';
 import { Field } from './Field';
 import type { Issue } from './issues';
 
@@ -52,6 +52,17 @@ export function BrandingTab({
           />
         </Field>
       </div>
+
+      <Field label="Currency" htmlFor="branding-currency" issues={issues} path={['branding', 'currency']}>
+        <Select
+          id="branding-currency"
+          aria-label="Currency"
+          style={{ width: 160 }}
+          value={value.currency}
+          options={CURRENCIES.map((c) => ({ value: c, label: c }))}
+          onChange={(currency) => onChange({ ...value, currency })}
+        />
+      </Field>
     </div>
   );
 }
