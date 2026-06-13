@@ -204,3 +204,32 @@ test('history lists versions, diffs against current, and rolls back forward-only
   expect(result.ok).toBe(true);
   expect(result.approval).toMatchObject({ route: 'MANUAL', role: 'assessor' });
 });
+
+test('compare page diffs two tenants both directions; same tenant twice shows none', async ({ page, request }) => {
+  await request.post('/api/reset-demo'); // fresh, well-known seed differences
+  await page.goto('/diff');
+  await expect(page.getByRole('heading', { name: 'Compare tenants' })).toBeVisible();
+
+  // The two selects share option titles, and AntD keeps both dropdowns mounted — so type
+  // to filter the focused select to one match and confirm with Enter (no cross-dropdown
+  // ambiguity, and it exercises the searchable picker).
+  const pick = async (selectLabel: string, name: string) => {
+    const box = page.getByLabel(selectLabel);
+    await box.click();
+    await box.fill(name);
+    await page.keyboard.press('Enter');
+  };
+
+  // SafeGuard (has DENTAL, threshold 20000) vs GovHealth (no DENTAL, threshold 0).
+  await pick('First tenant', 'SafeGuard Insurance');
+  await pick('Second tenant', 'GovHealth');
+
+  await expect(page.getByTestId('diff-table')).toBeVisible();
+  await expect(page.getByText('claimTypes.DENTAL')).toBeVisible(); // present in SafeGuard, absent in GovHealth
+  await expect(page.getByText('approval.autoApprovalThreshold')).toBeVisible();
+
+  // Same tenant on both sides → no differences.
+  await pick('First tenant', 'GovHealth');
+  await expect(page.getByTestId('diff-empty')).toBeVisible();
+  await expect(page.getByTestId('diff-table')).toHaveCount(0);
+});

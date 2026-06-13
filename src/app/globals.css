@@ -670,6 +670,23 @@ body {
   flex-shrink: 0;
 }
 
+/* — Compare picker — */
+.compare-picker {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.compare-picker .field {
+  flex: 1;
+  min-width: 0;
+}
+.compare-picker__vs {
+  padding-bottom: 9px;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
 /* — Diff table (history drawer + tenant compare) — */
 .diff {
   display: flex;

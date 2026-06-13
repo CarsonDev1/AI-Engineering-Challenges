@@ -681,7 +681,9 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 **Files:** Create: `src/app/diff/page.tsx`. Reuse: `src/components/DiffTable.tsx` (already built in Task 13 for the history drawer — Task 14 only adds the two-tenant picker page around it).
 **Verify:** select SafeGuard vs GovHealth → table shows ALL differences both directions (e.g. `claimTypes.DENTAL` removed, `customFields` changed, threshold changed, channels changed), grouped by section with added/removed/changed color coding; selecting the same tenant twice → "No differences".
 
-- [ ] Commit — `feat: side-by-side tenant config diff`
+> **Implemented (2026-06-13).** `/diff` fetches `/api/tenants` once and reuses each tenant's `activeConfig` from that single response, so both diff sides are the same Postgres jsonb serialization (the `diffConfigs` precondition) — no per-tenant refetch. Two `showSearch` selects (default to the first two tenants so a diff shows on arrival) feed `diffConfigs(left, right)` into the shared `DiffTable`. `showSearch` was chosen over a plain dropdown both for usability with many tenants and because two selects share option titles — typing to filter selects unambiguously. Added a "Compare" link to the header nav (`AppHeader`). Verified: `tsc` + `lint` clean, unit **49**, **Playwright 23/23** (new spec: SafeGuard vs GovHealth surfaces `claimTypes.DENTAL` + `approval.autoApprovalThreshold`; same tenant twice → `diff-empty`), screenshot confirms the grouped, colour-coded table.
+
+- [x] Commit _(pending user approval)_ — `feat: side-by-side tenant config diff`
 
 ### Task 15: Demo page — "one claim, three fates"
 
