@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { App, Badge, Button, Input, Tabs } from 'antd';
 import { CLAIM_TYPES, tenantConfigSchema, type TenantConfig } from '@/lib/config/schema';
 import { toIssues, type Issue } from './issues';
@@ -23,6 +24,7 @@ type Props = {
 // after the first failed save it re-runs on every change so errors clear as fixed.
 export function ConfigEditor({ tenantId, tenantName, slug, initialConfig }: Props) {
   const { message } = App.useApp();
+  const router = useRouter();
   const [draft, setDraft] = useState<TenantConfig>(initialConfig);
   const [note, setNote] = useState('');
   const [issues, setIssues] = useState<Issue[]>([]);
@@ -72,6 +74,13 @@ export function ConfigEditor({ tenantId, tenantName, slug, initialConfig }: Prop
         setIssues(toIssues(body.issues ?? []));
         setLiveValidate(true);
         message.error('The server rejected this configuration.');
+        return;
+      }
+      if (res.status === 404) {
+        // The tenant was deleted out from under this page (typically a demo reset in
+        // another tab). A retry can't succeed — send the user back to the fresh list.
+        message.error('This tenant no longer exists — it may have been reset. Returning to the tenant list.');
+        router.push('/');
         return;
       }
       if (!res.ok) {

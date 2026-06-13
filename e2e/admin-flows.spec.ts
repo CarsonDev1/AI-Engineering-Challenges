@@ -144,3 +144,63 @@ test('preview shows a structured error for a missing required custom field (no c
   await expect(page.getByTestId('process-result')).toBeVisible();
   await expect(page.getByText('Missing required field: Employee ID')).toBeVisible();
 });
+
+test('history lists versions, diffs against current, and rolls back forward-only', async ({ page, request }) => {
+  await request.post('/api/reset-demo'); // fresh seeds
+  await page.goto('/');
+
+  // Save a v2: raise SafeGuard's auto-approval threshold 20000 -> 25000.
+  await page
+    .getByTestId('tenant-card')
+    .filter({ hasText: 'SafeGuard Insurance' })
+    .getByRole('link', { name: 'Edit' })
+    .click();
+  await expect(page.getByRole('button', { name: 'Save configuration' })).toBeVisible();
+  const tenantId = page.url().split('/tenants/')[1].split('/')[0];
+
+  await page.getByRole('tab', { name: 'Approval' }).click();
+  await page.getByLabel('Auto-approval threshold').fill('25000');
+  await page.getByPlaceholder('Version note (optional)').fill('raise auto-approval to 25k');
+  await page.getByRole('button', { name: 'Save configuration' }).click();
+  await expect(page.getByText('Saved as version 2')).toBeVisible();
+
+  // History shows both versions; v2 is current.
+  await page.goto(`/tenants/${tenantId}/history`);
+  await expect(page.getByTestId('version-row')).toHaveCount(2);
+  const v2Row = page.getByTestId('version-row').filter({ hasText: 'v2' });
+  await expect(v2Row).toContainText('Current');
+  await expect(v2Row).toContainText('raise auto-approval to 25k'); // the save note lands on the new version
+  await expect(page.getByTestId('version-row').filter({ hasText: 'v1' })).toContainText('initial version');
+
+  // Diff v1 vs current surfaces the threshold change.
+  await page
+    .getByTestId('version-row')
+    .filter({ hasText: 'v1' })
+    .getByRole('button', { name: 'Diff vs current' })
+    .click();
+  await expect(page.getByTestId('diff-table')).toBeVisible();
+  await expect(page.getByText('approval.autoApprovalThreshold')).toBeVisible();
+  await page.keyboard.press('Escape'); // close the drawer
+
+  // Roll back to v1 -> creates v3 (note "rollback to v1"), now current; old rows intact.
+  await page.getByTestId('version-row').filter({ hasText: 'v1' }).getByRole('button', { name: 'Roll back' }).click();
+  await page.getByRole('button', { name: 'Yes, roll back' }).click();
+  await expect(page.getByText(/Rolled back to v1/)).toBeVisible();
+  await expect(page.getByTestId('version-row')).toHaveCount(3);
+  const v3 = page.getByTestId('version-row').filter({ hasText: 'v3' });
+  await expect(v3).toContainText('rollback to v1');
+  await expect(v3).toContainText('Current');
+
+  // The runtime now reflects the rolled-back threshold (20000): a 22000 claim that v2
+  // (25000) auto-approved is MANUAL again under v3.
+  const result = await (
+    await request.post('/api/process-claim', {
+      data: {
+        tenantId,
+        claim: { claimType: 'OUTPATIENT', amount: 22000, submittedAt: '2026-06-12', customFieldValues: { employeeId: 'E-1' } },
+      },
+    })
+  ).json();
+  expect(result.ok).toBe(true);
+  expect(result.approval).toMatchObject({ route: 'MANUAL', role: 'assessor' });
+});

@@ -193,7 +193,7 @@ test('editor shows a not-found state for a deleted/unknown tenant id', async ({ 
 
 // ── 10. REPRO: stale editor after a demo reset (ids change underneath) ────────────
 
-test('REPRO: saving from an editor opened before a demo reset fails (stale id → 404)', async ({ page, request }) => {
+test('REPRO: saving from an editor opened before a demo reset fails gracefully (stale id → 404)', async ({ page, request }) => {
   await openEditor(page, 'SafeGuard Insurance');
   await request.post('/api/reset-demo'); // recreates seeds with NEW ids
 
@@ -202,7 +202,30 @@ test('REPRO: saving from an editor opened before a demo reset fails (stale id �
     page.getByRole('button', { name: 'Save configuration' }).click(),
   ]);
   expect(res.status()).toBe(404);
-  await expect(page.getByText('Save failed.')).toBeVisible();
+  // The dead-end is handled: an actionable message + redirect to the fresh tenant list,
+  // not a cryptic "Save failed." with the user stuck on a stale page.
+  await expect(page.getByText(/no longer exists/)).toBeVisible();
+  await expect(page).toHaveURL('/');
+});
+
+test('REPRO: rolling back from a history page gone stale (after reset) fails gracefully', async ({ page, request }) => {
+  // Give SafeGuard a 2nd version so the v1 row shows a Roll back button.
+  await request.post('/api/reset-demo');
+  const tenants = (await (await request.get('/api/tenants')).json()) as Array<{ id: string; slug: string }>;
+  const safeguard = tenants.find((t) => t.slug === 'safeguard')!;
+  const versions = (await (await request.get(`/api/tenants/${safeguard.id}/versions`)).json()) as Array<{ id: string }>;
+  await request.post(`/api/tenants/${safeguard.id}/rollback`, { data: { versionId: versions[0].id } });
+
+  await page.goto(`/tenants/${safeguard.id}/history`);
+  await expect(page.getByTestId('version-row')).toHaveCount(2);
+
+  await request.post('/api/reset-demo'); // the open page's tenant id is now stale
+
+  // Exactly one Roll back button (on the non-current v1 row).
+  await page.getByRole('button', { name: 'Roll back' }).click();
+  await page.getByRole('button', { name: 'Yes, roll back' }).click();
+  await expect(page.getByText(/no longer exists/)).toBeVisible();
+  await expect(page).toHaveURL('/');
 });
 
 // ── 11. Runtime engine still reproduces the worked example after all edits ────────

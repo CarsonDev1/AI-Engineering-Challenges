@@ -613,6 +613,120 @@ body {
   padding: 28px 22px;
 }
 
+/* — Version history — */
+.version-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.version-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.version-row__lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 92px;
+  flex-shrink: 0;
+}
+.version-row__no {
+  font-size: 15px;
+  font-weight: 600;
+}
+.version-row__current {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--papaya-dark);
+  background: var(--papaya-wash);
+  border: 1px solid color-mix(in srgb, var(--papaya) 28%, transparent);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.version-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.version-row__note {
+  font-weight: 500;
+}
+.version-row__date {
+  font-size: 12px;
+}
+.version-row__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* — Diff table (history drawer + tenant compare) — */
+.diff {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.diff__head {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--bg-soft);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.diff__section {
+  margin: 0;
+  padding: 10px 14px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: var(--bg);
+}
+.diff__row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  align-items: start;
+}
+.diff__row--added {
+  background: color-mix(in srgb, #16a34a 7%, var(--bg));
+}
+.diff__row--removed {
+  background: color-mix(in srgb, #dc2626 7%, var(--bg));
+}
+.diff__row--changed {
+  background: color-mix(in srgb, var(--papaya) 5%, var(--bg));
+}
+.diff__path {
+  font-size: 12px;
+  color: var(--ink);
+  word-break: break-word;
+}
+.diff__val {
+  word-break: break-word;
+}
+
 /* — Responsive — */
 @media (max-width: 860px) {
   .preview-grid {
@@ -645,6 +759,10 @@ body {
   }
   .tier-row__unbounded {
     width: auto;
+  }
+  .version-row {
+    flex-wrap: wrap;
+    gap: 10px 14px;
   }
 }
 

@@ -670,11 +670,15 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 **Files:** Create: `src/app/tenants/[id]/history/page.tsx`, `src/components/VersionDiffDrawer.tsx`
 **Verify:** every save in Task 11 appears as a version row (no, note, date); "Diff vs current" opens a drawer listing `diffConfigs(version, current)` entries grouped by top-level section; Rollback creates a NEW version (note `rollback to vN`) — old rows unchanged; preview immediately reflects the rolled-back config.
 
-- [ ] Commit — `feat: config history with diff and forward-only rollback`
+> **Implemented (2026-06-13).** History page fetches the tenant (for `activeVersionId` + active config) and the versions list in parallel, then renders one row per version (vN · note · localised timestamp · `Current` badge on the active one). "Diff vs current" opens `VersionDiffDrawer`, which feeds `diffConfigs(version.config, activeConfig)` to a new **shared `DiffTable`** — both sides are jsonb DB reads, satisfying the diff's equal-serialization precondition. Rollback confirms, POSTs `/api/tenants/[id]/rollback`, refetches, and toasts `Rolled back to vN — saved as version M`; the new version carries note `rollback to vN` and becomes current while older rows stay byte-identical (forward-only). **Deviation:** `DiffTable` (planned as a Task 14 file) is built **now** because the drawer needs it — Task 14 reuses it rather than creating it. Two antd v6 prop fixes while building: Drawer `width`→`size` (v6 `size` accepts a number) and the earlier `Alert` `message`→`title`. Verified: `tsc` + `lint` clean, unit **49**, **Playwright 21/21** (new spec drives editor-save→history→diff→rollback and asserts the runtime threshold changed: a 22000 claim auto-approved under v2's 25000 threshold is MANUAL again after rolling back to v1's 20000), screenshots confirm the version list + the `v2 vs current` diff drawer.
+>
+> **Stale-id hardening (2026-06-13).** User hit "rollback error"; reproduced (MCP browser + network capture) as a **stale tenant id → 404** after a demo reset in another tab — rollback itself returns 200 on a valid id, so not a rollback bug. Both stale-id mutation paths (history **rollback** and editor **save**) now special-case 404: an actionable message ("…no longer exists — it may have been reset. Returning to the tenant list.") + redirect to `/` (where fresh data loads), instead of a dead-end "Rollback/Save failed." toast. (Preview already handled its 404.) Pinned by two e2e: the save-REPRO updated to assert the new message + redirect, plus a new rollback-stale REPRO. This is the stale-id slice of Task 16's error-state checklist, pulled forward; Task 16 still owns the rest. Suite **22/22**.
+
+- [x] Commit _(pending user approval)_ — `feat: config history with diff and forward-only rollback`
 
 ### Task 14: Tenant-vs-tenant diff page
 
-**Files:** Create: `src/app/diff/page.tsx`, `src/components/DiffTable.tsx` (shared with Task 13's drawer)
+**Files:** Create: `src/app/diff/page.tsx`. Reuse: `src/components/DiffTable.tsx` (already built in Task 13 for the history drawer — Task 14 only adds the two-tenant picker page around it).
 **Verify:** select SafeGuard vs GovHealth → table shows ALL differences both directions (e.g. `claimTypes.DENTAL` removed, `customFields` changed, threshold changed, channels changed), grouped by section with added/removed/changed color coding; selecting the same tenant twice → "No differences".
 
 - [ ] Commit — `feat: side-by-side tenant config diff`
