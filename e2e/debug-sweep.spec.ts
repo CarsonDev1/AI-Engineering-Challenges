@@ -228,6 +228,25 @@ test('REPRO: rolling back from a history page gone stale (after reset) fails gra
   await expect(page).toHaveURL('/');
 });
 
+// ── 10b. REPRO: demo page processing after a reset must not crash ─────────────────
+
+test('REPRO: demo processing with stale seed ids recovers, never crashes the panel', async ({ page, request }) => {
+  await request.post('/api/reset-demo');
+  await page.goto('/demo');
+  // Wait until the page has loaded its tenants (the button only renders then), so the
+  // reset below genuinely makes the already-loaded ids stale.
+  await expect(page.getByRole('button', { name: 'Process for all three' })).toBeVisible();
+
+  await request.post('/api/reset-demo'); // the page's seed ids are now stale → process-claim 404s
+
+  await page.getByRole('button', { name: 'Process for all three' }).click();
+  // The 404 bodies must not reach ProcessResultPanel (that crashed on result.errors.map);
+  // the page recovers with a message and stays alive.
+  await expect(page.getByText(/demo tenants changed/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'One claim, three fates' })).toBeVisible();
+  await expect(page.getByTestId('process-result')).toHaveCount(0);
+});
+
 // ── 11. Runtime engine still reproduces the worked example after all edits ────────
 
 test('worked example intact: SafeGuard auto-approves 12k OUTPATIENT, SLA 2026-06-19', async ({ request }) => {

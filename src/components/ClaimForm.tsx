@@ -81,7 +81,8 @@ export function ClaimForm({
   );
 }
 
-function CustomFieldInput({
+// Exported so the demo page can render the same per-type input outside a full ClaimForm.
+export function CustomFieldInput({
   field,
   value,
   onChange,

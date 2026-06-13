@@ -687,10 +687,14 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 
 ### Task 15: Demo page — "one claim, three fates"
 
-**Files:** Create: `src/app/demo/page.tsx`
+**Files:** Create: `src/app/demo/page.tsx`. Modify: `src/components/ClaimForm.tsx` (export `CustomFieldInput` for reuse), `AppHeader.tsx` (Demo nav link).
 **Verify:** one shared claim form (OUTPATIENT, amount, date) + per-tenant custom-field inputs prefilled with valid values; Submit fires the SAME claim to `/api/process-claim` for all three seed tenants; three result columns render in each tenant's branding showing different routing/notifications/SLA — the spec §5 table reproduced live. A "Clear custom fields" toggle demonstrates per-tenant validation errors.
 
-- [ ] Commit — `feat: one-claim-three-fates demo page`
+> **Implemented (2026-06-13).** `/demo` loads the three seeds (filtered by slug, in brief order), shares one claim (type from the types ALL three enable · amount · date) and prefills each tenant's custom fields with valid values; "Process for all three" fires three parallel POSTs to the runtime `/api/process-claim` and renders three `BrandingFrame` columns, each with the tenant's custom inputs (reusing the now-exported `CustomFieldInput`) + a `ProcessResultPanel`. The "Clear custom fields" switch sends `{}` so SafeGuard/GovHealth show their required-field errors while HealthFirst (no customs) still processes. Browser-verified the spec §5 fates live: SafeGuard AUTO/2026-06-19 · HealthFirst assessor/2026-06-23 · GovHealth committee/2026-07-03.
+>
+> **Bug found + fixed during verification:** a non-200 process-claim response (e.g. a stale seed id after a reset → 404) returns `{ error }`, not a `ProcessClaimResult`; feeding it to `ProcessResultPanel` crashed on `result.errors.map`. `run()` now keeps only 200 bodies and, on any non-OK, shows a message + refetches the seeds (the demo's slice of the stale-id hardening); `/api/tenants` is fetched `no-store` so a cached list can't hand the page dead ids. Pinned by a demo-stale REPRO. Also bumped the Playwright `timeout`→120s / `expect`→30s: the suite drives real Neon over cross-region WS and an occasional latency spike (not logic) was tripping the old 60s/15s limits — two consecutive full runs are now green (**25/25**). `tsc` + `lint` clean, unit **49**, screenshot confirms the three branded columns.
+
+- [x] Commit _(pending user approval)_ — `feat: one-claim-three-fates demo page`
 
 ---
 

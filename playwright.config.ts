@@ -13,8 +13,10 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [['list']],
-  timeout: 60_000,
-  expect: { timeout: 15_000 },
+  // Generous timeouts: every spec drives the real Neon DB over cross-region WS round-trips
+  // (reset-demo alone is ~12 queries), so latency spikes — not logic — are the failure risk.
+  timeout: 120_000,
+  expect: { timeout: 30_000 },
   use: {
     baseURL,
     trace: 'on-first-retry',

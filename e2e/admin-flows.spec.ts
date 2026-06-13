@@ -233,3 +233,30 @@ test('compare page diffs two tenants both directions; same tenant twice shows no
   await expect(page.getByTestId('diff-empty')).toBeVisible();
   await expect(page.getByTestId('diff-table')).toHaveCount(0);
 });
+
+test('demo runs one claim through three tenants and shows three different fates', async ({ page, request }) => {
+  await request.post('/api/reset-demo');
+  await page.goto('/demo');
+  await expect(page.getByRole('heading', { name: 'One claim, three fates' })).toBeVisible();
+
+  await page.getByLabel('Claim amount').fill('12000');
+  await page.getByLabel('Submission date').fill('2026-06-12');
+  await page.getByRole('button', { name: 'Process for all three' }).click();
+
+  const col = (slug: string) => page.locator(`[data-testid="demo-column"][data-tenant="${slug}"]`);
+  // Same 12000 OUTPATIENT claim, three configs → three outcomes (spec §5).
+  await expect(col('safeguard').getByTestId('approval-route')).toContainText('Auto-approved');
+  await expect(col('safeguard').getByTestId('sla-deadline')).toHaveText('2026-06-19');
+  await expect(col('healthfirst').getByTestId('approval-route')).toContainText('assessor');
+  await expect(col('healthfirst').getByTestId('sla-deadline')).toHaveText('2026-06-23');
+  await expect(col('govhealth').getByTestId('approval-route')).toContainText('committee');
+  await expect(col('govhealth').getByTestId('sla-deadline')).toHaveText('2026-07-03');
+
+  // Clearing custom fields surfaces each tenant's required-field errors; HealthFirst has
+  // none, so it still processes.
+  await page.getByLabel('Clear custom fields').click();
+  await page.getByRole('button', { name: 'Process for all three' }).click();
+  await expect(col('safeguard').getByTestId('process-result')).toContainText('Employee ID');
+  await expect(col('govhealth').getByTestId('process-result')).toContainText('Department');
+  await expect(col('healthfirst').getByTestId('approval-route')).toContainText('assessor');
+});

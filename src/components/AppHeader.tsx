@@ -17,6 +17,7 @@ export function AppHeader() {
       </Link>
       <nav className="app-nav" aria-label="Primary">
         <Link href="/">Tenants</Link>
+        <Link href="/demo">Demo</Link>
         <Link href="/diff">Compare</Link>
       </nav>
     </header>
