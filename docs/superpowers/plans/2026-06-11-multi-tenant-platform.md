@@ -694,7 +694,7 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 >
 > **Bug found + fixed during verification:** a non-200 process-claim response (e.g. a stale seed id after a reset → 404) returns `{ error }`, not a `ProcessClaimResult`; feeding it to `ProcessResultPanel` crashed on `result.errors.map`. `run()` now keeps only 200 bodies and, on any non-OK, shows a message + refetches the seeds (the demo's slice of the stale-id hardening); `/api/tenants` is fetched `no-store` so a cached list can't hand the page dead ids. Pinned by a demo-stale REPRO. Also bumped the Playwright `timeout`→120s / `expect`→30s: the suite drives real Neon over cross-region WS and an occasional latency spike (not logic) was tripping the old 60s/15s limits — two consecutive full runs are now green (**25/25**). `tsc` + `lint` clean, unit **49**, screenshot confirms the three branded columns.
 
-- [x] Commit _(pending user approval)_ — `feat: one-claim-three-fates demo page`
+- [x] Commit _(`4e2d8da`)_ — `feat: one-claim-three-fates demo page`
 
 ---
 
@@ -705,8 +705,9 @@ State strategy: one `useState<TenantConfig>` for the whole draft; each tab edits
 **Files:** Modify: API handlers (404/400 paths), `src/components/ProcessResultPanel.tsx`, editor save flow
 **Verify:** each row of this checklist behaves as stated — (1) process-claim with unknown tenantId → 404 JSON, UI shows friendly error; (2) PUT config bypassing UI with overlapping documents → 400 + issues array; (3) deleting a tenant then visiting its pages → redirect to `/` with message; (4) claim MATERNITY to SafeGuard via demo/preview → structured CLAIM_TYPE_NOT_ENABLED rendered as an alert, never a blank panel; (5) empty tenant list (before seed) → empty-state with "Reset demo data" call-to-action.
 
-- [ ] Walk the checklist manually, fix gaps, add a regression test where the gap was in `lib/` logic.
-- [ ] Commit — `fix: harden error states across API and UI`
+- [x] Walked the checklist (browser + API evidence). **All five already pass** — the error states were hardened incrementally across M3, so this was largely a confirmation pass: (1) unknown `tenantId` → 404 JSON; preview shows a message, demo refetches. (2) overlapping-docs / malformed config bypassing the UI → 400 + `issues` (the shared schema + route `safeParse`; confirmed live for a malformed claim, locked by the schema unit test + the "overlapping docs blocked inline" e2e). (3) visiting a deleted tenant's editor/history/preview → a consistent "Tenant not found / Back to tenants" empty-state (no crash) — kept as an empty-state rather than an auto-redirect for direct visits, which is clearer for a deep link; *mutations* on a vanished tenant still redirect to `/` (the stale-id slice done in Tasks 13/15). (4) a disabled-type claim → `CLAIM_TYPE_NOT_ENABLED` rendered by `ProcessResultPanel`'s `!ok` alert branch, never a blank panel (the UI also only offers enabled types, so it can't be triggered by accident). (5) empty tenant list → empty-state with a "Reset demo data" CTA. Also grepped/verified the antd surface: no remaining v6 deprecation warnings (Alert/Drawer fixed earlier; the editor console is clean across all six tabs). No `lib/` gaps found, so no new unit tests.
+- [x] **Added regression coverage + hardened the e2e suite itself:** not-found specs for the history & preview pages (editor already had one); and fixed two real flaky-test traps surfaced by repeated full runs — the stale-id REPROs now invalidate via a throwaway tenant created-then-DELETED (deterministic; no `reset-demo` recreate window or seed churn), and `saveExpectOk` no longer reads the response body over CDP (`response.text()`/`json()` intermittently throws "No data found for resource" under load) nor collides on two overlapping "Saved as version N" toasts (`.last()`). Two consecutive full runs now pass **27/27** at ~3.2 min. `tsc` + `lint` clean, unit **49**.
+- [x] Commit _(pending user approval)_ — `fix: harden error states and stabilize the e2e suite`
 
 ### Task 17: Playwright E2E suite
 

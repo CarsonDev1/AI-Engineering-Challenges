@@ -27,17 +27,22 @@ async function openEditor(page: Page, name: string) {
   await expect(page.getByRole('heading', { name })).toBeVisible();
 }
 
-// Clicks Save, captures the PUT, asserts 200 (failing with the response body if not),
-// and waits for the version toast. Returns the new version number.
+// Clicks Save, asserts the PUT returned 200, and reads the new version number from the
+// success toast. Deliberately reads NO response body: response.text()/json() over CDP
+// intermittently throws "No data found for resource" once the body is evicted under load
+// (a flaky-test trap); response.status() is metadata and always available, and the toast
+// already carries the version number from the UI.
 async function saveExpectOk(page: Page): Promise<number> {
   const [res] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/config')),
     page.getByRole('button', { name: 'Save configuration' }).click(),
   ]);
-  expect(res.status(), `PUT /config body: ${await res.text()}`).toBe(200);
-  const versionNo = (await res.json()).version.versionNo as number;
-  await expect(page.getByText(`Saved as version ${versionNo}`)).toBeVisible();
-  return versionNo;
+  expect(res.status()).toBe(200);
+  // .last(): a quick second save in the same test can leave two "Saved as version N"
+  // toasts on screen at once; the newest (last in DOM) is this save's.
+  const toast = page.getByText(/Saved as version \d+/).last();
+  await expect(toast).toBeVisible();
+  return Number((await toast.textContent())!.match(/version (\d+)/)![1]);
 }
 
 // ── 1. The most direct repro: unchanged seed configs must round-trip ──────────────
@@ -184,42 +189,60 @@ test('enabling a notification event without channels is blocked until one is cho
   await request.delete(`/api/tenants/${created.id}`);
 });
 
-// ── 9. Editor not-found state ──────────────────────────────────────────────────────
+// ── 9. Not-found state on every tenant-scoped page (deleted/unknown id) ──────────────
 
-test('editor shows a not-found state for a deleted/unknown tenant id', async ({ page }) => {
-  await page.goto('/tenants/does-not-exist');
-  await expect(page.getByText('Tenant not found')).toBeVisible();
-});
+for (const { label, path } of [
+  { label: 'editor', path: '/tenants/does-not-exist' },
+  { label: 'history', path: '/tenants/does-not-exist/history' },
+  { label: 'preview', path: '/tenants/does-not-exist/preview' },
+]) {
+  test(`${label} shows a not-found state (not a crash) for an unknown tenant id`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page.getByText('Tenant not found')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Back to tenants' })).toBeVisible();
+  });
+}
 
-// ── 10. REPRO: stale editor after a demo reset (ids change underneath) ────────────
+// ── 10. REPRO: a tenant deleted out from under an open page (stale id → 404) ──────
+// Use a throwaway tenant we create then DELETE — deterministic (the id is cleanly gone,
+// no reset-demo recreate window) and it doesn't churn the shared seed data.
 
-test('REPRO: saving from an editor opened before a demo reset fails gracefully (stale id → 404)', async ({ page, request }) => {
-  await openEditor(page, 'SafeGuard Insurance');
-  await request.post('/api/reset-demo'); // recreates seeds with NEW ids
+async function makeThrowawayTenant(request: import('@playwright/test').APIRequestContext, label: string) {
+  const slug = `${label}-${Date.now()}`;
+  const res = await request.post('/api/tenants', {
+    data: { slug, name: `${label} Co`, config: defaultTenantConfig(`${label} Co`) },
+  });
+  return (await res.json()) as { id: string; slug: string };
+}
+
+test('REPRO: saving from an editor whose tenant was deleted fails gracefully (stale id → 404)', async ({ page, request }) => {
+  const t = await makeThrowawayTenant(request, 'stale-save');
+  await page.goto(`/tenants/${t.id}`);
+  await expect(page.getByRole('button', { name: 'Save configuration' })).toBeVisible();
+
+  await request.delete(`/api/tenants/${t.id}`); // the editor's id is now gone
 
   const [res] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/config')),
     page.getByRole('button', { name: 'Save configuration' }).click(),
   ]);
   expect(res.status()).toBe(404);
-  // The dead-end is handled: an actionable message + redirect to the fresh tenant list,
-  // not a cryptic "Save failed." with the user stuck on a stale page.
+  // The dead-end is handled: an actionable message + redirect to the tenant list, not a
+  // cryptic "Save failed." with the user stuck on a stale page.
   await expect(page.getByText(/no longer exists/)).toBeVisible();
   await expect(page).toHaveURL('/');
 });
 
-test('REPRO: rolling back from a history page gone stale (after reset) fails gracefully', async ({ page, request }) => {
-  // Give SafeGuard a 2nd version so the v1 row shows a Roll back button.
-  await request.post('/api/reset-demo');
-  const tenants = (await (await request.get('/api/tenants')).json()) as Array<{ id: string; slug: string }>;
-  const safeguard = tenants.find((t) => t.slug === 'safeguard')!;
-  const versions = (await (await request.get(`/api/tenants/${safeguard.id}/versions`)).json()) as Array<{ id: string }>;
-  await request.post(`/api/tenants/${safeguard.id}/rollback`, { data: { versionId: versions[0].id } });
+test('REPRO: rolling back from a history page whose tenant was deleted fails gracefully', async ({ page, request }) => {
+  const t = await makeThrowawayTenant(request, 'stale-rollback');
+  // A 2nd version so the v1 row shows a Roll back button.
+  const versions = (await (await request.get(`/api/tenants/${t.id}/versions`)).json()) as Array<{ id: string }>;
+  await request.post(`/api/tenants/${t.id}/rollback`, { data: { versionId: versions[0].id } });
 
-  await page.goto(`/tenants/${safeguard.id}/history`);
+  await page.goto(`/tenants/${t.id}/history`);
   await expect(page.getByTestId('version-row')).toHaveCount(2);
 
-  await request.post('/api/reset-demo'); // the open page's tenant id is now stale
+  await request.delete(`/api/tenants/${t.id}`); // the page's id is now stale
 
   // Exactly one Roll back button (on the non-current v1 row).
   await page.getByRole('button', { name: 'Roll back' }).click();
