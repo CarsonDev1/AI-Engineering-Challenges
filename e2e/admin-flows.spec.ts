@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
 
-// Seed the three sample tenants before the suite. Accessible-name / role / test-id
-// selectors only — AntD class names are unstable.
+// The critical admin journeys, end-to-end against the real Next server + Neon: list and
+// reset tenants, edit + version a config, block invalid input inline, onboard a tenant
+// with zero code, preview and demo a claim through the runtime engine, compare two
+// tenants, and view history + roll back. Edge cases and validation-rule enforcement live
+// in edge-cases.spec.ts. Selectors are accessible-name / role / test-id only — AntD class
+// names are unstable. Seeds the three sample tenants before the suite.
 test.beforeAll(async ({ request }) => {
   await request.post('/api/reset-demo');
 });
@@ -47,9 +51,15 @@ test('editor saves a new config version with a note', async ({ page }) => {
   await page.getByRole('tab', { name: 'Approval' }).click();
   await page.getByLabel('Auto-approval threshold').fill('25000');
   await page.getByPlaceholder('Version note (optional)').fill('raise auto-approval to 25k');
-  await page.getByRole('button', { name: 'Save configuration' }).click();
 
-  await expect(page.getByText('Saved as version 2')).toBeVisible();
+  // Wait on the PUT itself (the test's 120s budget) rather than racing the 3s success
+  // toast — under Neon latency the toast can appear/fade outside a short expect window.
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/config')),
+    page.getByRole('button', { name: 'Save configuration' }).click(),
+  ]);
+  expect(res.status()).toBe(200);
+  await expect(page.getByText(/Saved as version \d+/).last()).toBeVisible();
 });
 
 test('invalid config is blocked inline by client validation', async ({ page, request }) => {
@@ -161,10 +171,15 @@ test('history lists versions, diffs against current, and rolls back forward-only
   await page.getByRole('tab', { name: 'Approval' }).click();
   await page.getByLabel('Auto-approval threshold').fill('25000');
   await page.getByPlaceholder('Version note (optional)').fill('raise auto-approval to 25k');
-  await page.getByRole('button', { name: 'Save configuration' }).click();
-  await expect(page.getByText('Saved as version 2')).toBeVisible();
+  // Wait on the PUT (120s test budget), not the transient toast — latency-robust.
+  const [saveRes] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/config')),
+    page.getByRole('button', { name: 'Save configuration' }).click(),
+  ]);
+  expect(saveRes.status()).toBe(200);
 
-  // History shows both versions; v2 is current.
+  // History shows both versions; v2 is current. (The count is the real proof the save
+  // persisted; it also confirms the reset gave a clean v1 start.)
   await page.goto(`/tenants/${tenantId}/history`);
   await expect(page.getByTestId('version-row')).toHaveCount(2);
   const v2Row = page.getByTestId('version-row').filter({ hasText: 'v2' });

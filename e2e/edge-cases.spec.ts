@@ -1,9 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import { defaultTenantConfig } from '../src/lib/config/default-config';
 
-// Full-feature diagnostic sweep (debugging the reported "save configuration fails").
-// Every save captures the actual PUT response so a failure pinpoints status + body;
-// uncaught page errors fail the test that produced them.
+// Config-rule enforcement, edge cases, and graceful recovery — the robustness coverage
+// beyond admin-flows.spec.ts's happy-path journeys: every config save round-trips; each
+// cross-field validation rule is enforced through the real UI; a tenant/version deleted
+// out from under an open page recovers instead of crashing; and the engine still
+// reproduces the worked example. Selectors are accessible-name / role / test-id only
+// (AntD class names are unstable). Any uncaught page error fails the test that caused it.
 
 test.beforeAll(async ({ request }) => {
   await request.post('/api/reset-demo');
