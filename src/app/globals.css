@@ -303,6 +303,23 @@ body {
   color: var(--papaya);
   background: var(--papaya-wash);
 }
+/* Delete sits at the end of the action row, secondary + destructive (muted → red on hover). */
+.tenant-card__delete {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.tenant-card__delete:hover {
+  color: #dc2626;
+  background: color-mix(in srgb, #dc2626 8%, var(--bg));
+}
 
 @keyframes card-rise {
   from {

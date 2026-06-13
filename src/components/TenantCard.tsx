@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import type { TenantConfig } from '@/lib/config/schema';
@@ -10,8 +12,17 @@ export type TenantSummary = {
 };
 
 // A tenant rendered in its own brand colour (the spine, the type chips), so each
-// insurer's branding reads at a glance — branding is used, not just stored.
-export function TenantCard({ tenant, index }: { tenant: TenantSummary; index: number }) {
+// insurer's branding reads at a glance — branding is used, not just stored. Delete lives
+// here on the list card (where you manage tenants), not buried in the editor.
+export function TenantCard({
+  tenant,
+  index,
+  onDelete,
+}: {
+  tenant: TenantSummary;
+  index: number;
+  onDelete: (tenant: TenantSummary) => void;
+}) {
   const cfg = tenant.activeConfig;
   const brand = cfg?.branding.primaryColor ?? '#6f2c32';
   const enabledTypes = cfg
@@ -60,6 +71,14 @@ export function TenantCard({ tenant, index }: { tenant: TenantSummary; index: nu
           <Link href={`/tenants/${tenant.id}`}>Edit</Link>
           <Link href={`/tenants/${tenant.id}/preview`}>Preview</Link>
           <Link href={`/tenants/${tenant.id}/history`}>History</Link>
+          <button
+            type="button"
+            className="tenant-card__delete"
+            aria-label={`Delete ${tenant.name}`}
+            onClick={() => onDelete(tenant)}
+          >
+            Delete
+          </button>
         </div>
       </div>
     </article>

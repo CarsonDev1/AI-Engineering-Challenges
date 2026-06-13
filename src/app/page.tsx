@@ -45,6 +45,28 @@ export default function HomePage() {
       },
     });
 
+  // Delete from the list card (where you manage tenants). Destructive + irreversible →
+  // confirm first; a 404 means it's already gone, so refetch either way.
+  const confirmDelete = (tenant: TenantSummary) =>
+    modal.confirm({
+      title: `Delete ${tenant.name}?`,
+      content:
+        'This permanently removes the tenant and all of its configuration versions. This cannot be undone.',
+      okText: 'Yes, delete',
+      okButtonProps: { danger: true },
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          const res = await fetch(`/api/tenants/${tenant.id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 404) throw new Error('delete failed');
+          await load();
+          message.success(`Tenant “${tenant.name}” deleted.`);
+        } catch {
+          message.error('Delete failed.');
+        }
+      },
+    });
+
   return (
     <>
       <div className="page-head">
@@ -80,7 +102,7 @@ export default function HomePage() {
       ) : (
         <div className="tenant-grid">
           {tenants.map((t, i) => (
-            <TenantCard key={t.id} tenant={t} index={i} />
+            <TenantCard key={t.id} tenant={t} index={i} onDelete={confirmDelete} />
           ))}
         </div>
       )}

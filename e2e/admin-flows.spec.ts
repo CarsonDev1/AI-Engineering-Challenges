@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { defaultTenantConfig } from '../src/lib/config/default-config';
 
 // The critical admin journeys, end-to-end against the real Next server + Neon: list and
 // reset tenants, edit + version a config, block invalid input inline, onboard a tenant
@@ -274,4 +275,23 @@ test('demo runs one claim through three tenants and shows three different fates'
   await expect(col('safeguard').getByTestId('process-result')).toContainText('Employee ID');
   await expect(col('govhealth').getByTestId('process-result')).toContainText('Department');
   await expect(col('healthfirst').getByTestId('approval-route')).toContainText('assessor');
+});
+
+test('delete a tenant from the list card (completes CRUD)', async ({ page, request }) => {
+  // Throwaway tenant so the suite stays isolated (don't delete a seed).
+  const slug = `del-${Date.now()}`;
+  await request.post('/api/tenants', {
+    data: { slug, name: 'Trial Insurer', config: defaultTenantConfig('Trial Insurer') },
+  });
+
+  await page.goto('/');
+  const card = page.getByTestId('tenant-card').filter({ hasText: 'Trial Insurer' });
+  await expect(card).toBeVisible();
+
+  await card.getByRole('button', { name: 'Delete Trial Insurer' }).click();
+  await page.getByRole('button', { name: 'Yes, delete' }).click(); // confirm modal
+
+  await expect(page.getByTestId('tenant-card').filter({ hasText: 'Trial Insurer' })).toHaveCount(0);
+  const tenants = (await (await request.get('/api/tenants')).json()) as Array<{ slug: string }>;
+  expect(tenants.find((t) => t.slug === slug)).toBeUndefined();
 });
