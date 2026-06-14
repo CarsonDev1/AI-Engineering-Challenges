@@ -4,7 +4,7 @@ import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { App, Button } from 'antd';
-import { VersionDiffDrawer } from '@/components/VersionDiffDrawer';
+import { VersionDrawer } from '@/components/VersionDrawer';
 import type { TenantConfig } from '@/lib/config/schema';
 
 type TenantDetail = {
@@ -23,7 +23,7 @@ export default function HistoryPage({ params }: { params: Promise<{ id: string }
   const [tenant, setTenant] = useState<TenantDetail | null>(null);
   const [versions, setVersions] = useState<Version[] | null>(null);
   const [missing, setMissing] = useState(false);
-  const [diffVersion, setDiffVersion] = useState<Version | null>(null);
+  const [drawer, setDrawer] = useState<{ version: Version; mode: 'view' | 'diff' } | null>(null);
   const [rollingBack, setRollingBack] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -135,7 +135,10 @@ export default function HistoryPage({ params }: { params: Promise<{ id: string }
                 <span className="version-row__date muted font-mono">{new Date(v.createdAt).toLocaleString()}</span>
               </div>
               <div className="version-row__actions">
-                <Button size="small" onClick={() => setDiffVersion(v)}>
+                <Button size="small" onClick={() => setDrawer({ version: v, mode: 'view' })}>
+                  View
+                </Button>
+                <Button size="small" onClick={() => setDrawer({ version: v, mode: 'diff' })}>
                   Diff vs current
                 </Button>
                 {!isCurrent && (
@@ -150,11 +153,12 @@ export default function HistoryPage({ params }: { params: Promise<{ id: string }
       </div>
 
       {tenant.activeConfig && (
-        <VersionDiffDrawer
-          open={diffVersion !== null}
-          version={diffVersion}
+        <VersionDrawer
+          open={drawer !== null}
+          version={drawer?.version ?? null}
+          mode={drawer?.mode ?? 'diff'}
           current={tenant.activeConfig}
-          onClose={() => setDiffVersion(null)}
+          onClose={() => setDrawer(null)}
         />
       )}
     </>

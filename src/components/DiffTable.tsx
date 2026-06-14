@@ -1,19 +1,7 @@
 'use client';
 
 import type { DiffEntry } from '@/lib/diff/diff-configs';
-
-// Canonical section order + labels — mirrors the editor tabs so a diff reads in the same
-// order an admin edits. Shared by the history drawer (version vs current) and the
-// tenant-vs-tenant compare page (Task 14); both feed it `diffConfigs` output.
-const SECTION_LABELS: Record<string, string> = {
-  branding: 'Branding',
-  claimTypes: 'Claim Types & Documents',
-  approval: 'Approval',
-  notifications: 'Notifications',
-  sla: 'SLA',
-  customFields: 'Custom Fields',
-};
-const SECTION_ORDER = Object.keys(SECTION_LABELS);
+import { SECTION_LABELS, orderedSections } from './config-sections';
 
 const fmt = (v: unknown): string => {
   if (v === undefined) return '—';
@@ -47,10 +35,6 @@ export function DiffTable({
     group.push(e);
     bySection.set(section, group);
   }
-  const orderedSections = [
-    ...SECTION_ORDER.filter((s) => bySection.has(s)),
-    ...[...bySection.keys()].filter((s) => !SECTION_ORDER.includes(s)),
-  ];
 
   return (
     <div className="diff" data-testid="diff-table">
@@ -59,7 +43,7 @@ export function DiffTable({
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>
       </div>
-      {orderedSections.map((section) => (
+      {orderedSections(bySection.keys()).map((section) => (
         <div className="diff__group" key={section}>
           <h4 className="diff__section">{SECTION_LABELS[section] ?? section}</h4>
           {bySection.get(section)!.map((e) => (

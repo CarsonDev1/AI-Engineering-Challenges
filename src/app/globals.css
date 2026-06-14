@@ -761,6 +761,41 @@ body {
   font-size: 13px;
 }
 
+/* — Config view (read-only full config of a version) — */
+.config-view {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.config-view__section {
+  margin: 0;
+  padding: 10px 14px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  background: var(--bg-soft);
+}
+.config-view__row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  align-items: start;
+}
+.config-view__path {
+  font-size: 12px;
+  color: var(--ink-soft);
+  word-break: break-word;
+}
+.config-view__val {
+  word-break: break-word;
+}
+
 /* — Diff table (history drawer + tenant compare) — */
 .diff {
   display: flex;

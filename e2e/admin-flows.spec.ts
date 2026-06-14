@@ -198,6 +198,12 @@ test('history lists versions, diffs against current, and rolls back forward-only
   await expect(page.getByText('approval.autoApprovalThreshold')).toBeVisible();
   await page.keyboard.press('Escape'); // close the drawer
 
+  // View v1's full config (read-only) — "view past versions".
+  await page.getByTestId('version-row').filter({ hasText: 'v1' }).getByRole('button', { name: 'View' }).click();
+  await expect(page.getByTestId('config-view')).toBeVisible();
+  await expect(page.getByTestId('config-view')).toContainText('SafeGuard Insurance'); // branding.companyName
+  await page.keyboard.press('Escape');
+
   // Roll back to v1 -> creates v3 (note "rollback to v1"), now current; old rows intact.
   await page.getByTestId('version-row').filter({ hasText: 'v1' }).getByRole('button', { name: 'Roll back' }).click();
   await page.getByRole('button', { name: 'Yes, roll back' }).click();
