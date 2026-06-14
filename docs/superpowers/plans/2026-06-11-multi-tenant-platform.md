@@ -789,10 +789,11 @@ Each `...` is a full Playwright spec using `page.getByRole`/`getByLabel` selecto
 **Files:** Rewrite: `README.md`; Create: `docs/WRITEUP.md`, `docs/DEMO_SCRIPT.md`
 **Verify:** a reader can go from zero → running locally in <10 minutes using only README; writeup covers approach, key decisions (cite the Decision Log), trade-offs (no-auth, weekends-only business days), and how AI tools were used; demo script walks: reset → tour 3 tenants → preview → demo page → diff → edit+history+rollback → create tenant #4 → process claim → persistence note.
 
-- [ ] **README sections:** what this is (challenge link) · live URL · screenshots · quickstart (env, migrate, seed, dev) · architecture summary (one engine, versioned JSONB, validation) · testing (`npm run test` — expected count) · project docs map (specs/plans/PROGRESS).
-- [ ] **WRITEUP sections:** problem framing · architecture decisions with reasoning · the tricky edge cases and how they're handled (threshold 0, tier boundaries, business days, preview=runtime, persistence) · AI-assisted workflow description (spec → plan → task-by-task with verification) · time spent breakdown · what I'd do with more time.
-- [ ] Final `docs/PROGRESS.md` update: phase → submitted; Session Log entry.
-- [ ] Commit — `docs: README, writeup, and demo script for submission` → push.
+- [x] **README** rewritten for the finished product: live URL, 4 screenshots (home/demo/editor/compare in `docs/screenshots/`), one-claim-three-fates table, architecture, tech stack, quickstart + Deployment section, testing (54 unit · 1 integration · 28 e2e), project structure, docs map, scope/trade-offs.
+- [x] **`docs/WRITEUP.md`**: problem framing · architecture decisions + reasoning · the tricky edge cases (tier boundaries, threshold 0, business days, dead-tier threshold, preview=runtime, stale-id recovery, persistence) · validation rules · how AI tooling was directed (spec → plan → verify, test-first, decision log, adversarial self-checking) · effort · what's next.
+- [x] **`docs/DEMO_SCRIPT.md`**: ~6-min walkthrough — reset → demo (three fates) → configure (six tabs + live validation) → preview → compare → history (view/diff/rollback) → onboard 4th (zero code) + currency → delete; plus the seeded-tenant reference table.
+- [ ] Final `docs/PROGRESS.md` update + Session Log entry.
+- [ ] Commit _(pending user approval)_ — `docs: README, writeup, and demo script for submission` → push.
 
 ---
 
