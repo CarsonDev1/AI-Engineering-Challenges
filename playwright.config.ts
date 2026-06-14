@@ -4,8 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
 // one database; Playwright boots `npm run dev` and tears it down automatically.
 // Port defaults to 3000 but is overridable via E2E_PORT so the suite can run on a dev box
 // where 3000 is already taken by another project (set E2E_PORT=3100 npm run test:e2e).
+// E2E_BASE_URL points the suite at an already-running deployment (e.g. the Vercel URL) for
+// a live smoke test — when set, we target it and skip booting a local dev server.
+const LIVE_URL = process.env.E2E_BASE_URL;
 const PORT = process.env.E2E_PORT ?? '3000';
-const baseURL = `http://localhost:${PORT}`;
+const baseURL = LIVE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -23,10 +26,13 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  webServer: {
-    command: `npm run dev -- -p ${PORT}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  // No local server when smoke-testing a live deployment.
+  webServer: LIVE_URL
+    ? undefined
+    : {
+        command: `npm run dev -- -p ${PORT}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });

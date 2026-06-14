@@ -184,8 +184,10 @@ test('enabling a notification event without channels is blocked until one is cho
   await page.getByRole('button', { name: 'Save configuration' }).click();
   await expect(page.getByText('enabled events need at least one channel')).toBeVisible();
 
+  // click() + assert the observable outcome (the error clears), rather than check() which
+  // races AntD's controlled re-render of the Checkbox.Group ("did not change its state").
   const approvedRow = page.locator('.notif-row').filter({ has: page.getByText('approved', { exact: true }) });
-  await approvedRow.getByRole('checkbox', { name: 'email' }).check();
+  await approvedRow.getByRole('checkbox', { name: 'email' }).click();
   await expect(page.getByText('enabled events need at least one channel')).toHaveCount(0);
   await saveExpectOk(page);
 
